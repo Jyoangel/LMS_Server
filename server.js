@@ -12,7 +12,7 @@ const cookieParser = require('cookie-parser');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
-const Chat = require('../Server/Models/Chat');
+
 require('./routes/feeScheduler');
 // Importing routes
 const loginRoutes = require('./routes/authroutes/loginroutes');
