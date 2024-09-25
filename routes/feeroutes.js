@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const router = express.Router();
 const Fee = require('../Models/Fee');
@@ -5,21 +6,22 @@ const Student = require('../Models/StudentDetails');
 const FeeNotice = require('../Models/FeeNotice');
 const nodemailer = require('nodemailer');
 const checkRole = require('../middleware/checkRole');
-
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASS = process.env.EMAIL_PASS;
 // Nodemailer setup
 const transporter = nodemailer.createTransport({
     service: 'gmail', // Replace with your email service provider
     auth: {
-        user: 'jyo209gup201@gmail.com',
+        user: EMAIL_USER,
 
-        pass: 'endr hamj dblu rhiu'   // Your email password
+        pass: EMAIL_PASS   // Your email password
     }
 });
 
 // Helper function to send email
 const sendEmail = (to, subject, text) => {
     const mailOptions = {
-        from: 'jyo209gup201@gmail.com', // Your email address
+        from: EMAIL_USER, // Your email address
         to: to,
         subject: subject,
         text: text

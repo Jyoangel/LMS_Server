@@ -40,33 +40,8 @@ router.get('/get', async (req, res) => {
     }
 });
 
-// router.put('/update/:id', async (req, res) => {
-//     try {
-//         const { id } = req.params;
-//         const { present } = req.body; // 'present' should be a boolean value
 
-//         // Find and update the attendance record
-//         const attendance = await Attendance.findById(id);
 
-//         if (!attendance) {
-//             return res.status(404).json({ message: 'Attendance record not found' });
-//         }
-
-//         attendance.present = present; // Update the present field
-//         const updatedAttendance = await attendance.save();
-
-//         res.json(updatedAttendance);
-//     } catch (error) {
-//         res.status(400).json({ message: error.message });
-//     }
-// });
-
-// Helper function to convert to IST
-const convertToIST = (date) => {
-    const utcOffsetMinutes = date.getTimezoneOffset(); // UTC offset in minutes
-    const istOffsetMinutes = 330; // IST is UTC + 5:30 = 330 minutes
-    return new Date(date.getTime() + (istOffsetMinutes - utcOffsetMinutes) * 60000);
-};
 
 // Cron job that runs at midnight (00:00 IST)
 cron.schedule('0 18 * * *', async () => { // 18:00 UTC = 00:00 IST
@@ -88,75 +63,7 @@ cron.schedule('0 18 * * *', async () => { // 18:00 UTC = 00:00 IST
     }
 });
 
-// Update attendance using ID (router.put)
-// router.put('/update/:id', async (req, res) => {
-//     try {
-//         const { id } = req.params;
-//         const { present, updateDate } = req.body;
 
-//         if (typeof present !== 'boolean') {
-//             return res.status(400).json({ message: 'Invalid value for present' });
-//         }
-
-//         const attendance = await Attendance.findById(id);
-//         if (!attendance) {
-//             return res.status(404).json({ message: 'Attendance record not found' });
-//         }
-
-//         // Get the date in IST and set to midnight
-//         const istDateTime = updateDate
-//             ? moment.tz(updateDate, 'Asia/Kolkata') // Convert provided date to IST and set to midnight
-//             : moment.tz('Asia/Kolkata'); // Current IST date at midnight
-
-//         // Store the date as a formatted string
-//         const formattedDate = moment.tz("Asia/Kolkata").format("DD-MM-YYYY"); // Format with IST timezone
-
-//         // Console logs for debugging
-//         console.log('updateDate:', updateDate);
-//         console.log('IST dateTime:', istDateTime.toString());
-//         console.log('Formatted IST dateTime for storage:', formattedDate);
-
-//         // Check if the date already exists in the array
-//         const existingEntry = attendance.dates.find(entry =>
-//             moment(entry.date, 'DD-MM-YYYY').isSame(istDateTime, 'day') // Match the date by day
-//         );
-
-//         if (existingEntry) {
-//             // Update the existing entry
-//             existingEntry.present = present;
-//             existingEntry.date = formattedDate; // Store the date in the desired format
-//         } else {
-//             // Add a new entry with date and time in IST
-//             attendance.dates.push({
-//                 date: formattedDate,  // Store date in the desired format
-//                 present
-//             });
-//         }
-
-//         // Update the record-level fields: present and date
-//         attendance.present = present;
-//         attendance.date = formattedDate;  // Store date in the desired format
-//         console.log(attendance.date);
-//         // Save the updated attendance record
-
-//         const savedAttendance = await attendance.save();
-//         console.log("attendance", savedAttendance);
-//         // Format the response
-//         const formattedAttendance = {
-//             ...attendance.toObject(),
-//             date: moment(attendance.date).tz('Asia/Kolkata').format('YYYY-MM-DDTHH:mm:ss+05:30'),
-//             dates: attendance.dates.map(entry => ({
-//                 ...entry,
-//                 date: moment(entry.date).tz('Asia/Kolkata').format('YYYY-MM-DDTHH:mm:ss+05:30')
-//             }))
-//         };
-
-//         res.json(savedAttendance);
-//     } catch (error) {
-//         console.log('Error:', error);
-//         res.status(400).json({ message: error.message });
-//     }
-// });
 
 
 
@@ -226,6 +133,64 @@ router.put('/update/:id', async (req, res) => {
 });
 
 
+router.put('/updates/:studentId', async (req, res) => {
+    try {
+        const { studentId } = req.params;
+        const { present, updateDate } = req.body;
+
+        if (typeof present !== 'boolean') {
+            return res.status(400).json({ message: 'Invalid value for present' });
+        }
+
+        // Fetch attendance record by studentId
+        const attendance = await Attendance.findOne({ studentId });
+
+        if (!attendance) {
+            return res.status(404).json({ message: 'Attendance record not found' });
+        }
+
+        // Convert updateDate to IST timezone or use the current date in IST
+        const istDateTime = updateDate
+            ? moment.tz(updateDate, 'Asia/Kolkata').toDate()
+            : moment.tz('Asia/Kolkata').toDate();
+
+        const existingEntry = attendance.dates.find(entry =>
+            moment(entry.date).isSame(istDateTime, 'day') // Match the date by day
+        );
+
+
+        if (existingEntry) {
+            // Update the existing entry
+            existingEntry.present = present;
+            existingEntry.date = istDateTime;
+        } else {
+            // Add a new entry
+            attendance.dates.push({ date: istDateTime, present });
+        }
+
+        // Update the main record fields
+        attendance.present = present;
+        attendance.date = istDateTime;
+
+        // Save the updated attendance record
+        const savedAttendance = await attendance.save();
+
+        // Format the response with dates converted to IST format
+        const formattedAttendance = {
+            ...savedAttendance.toObject(),
+            date: moment(savedAttendance.date).tz('Asia/Kolkata').format('YYYY-MM-DDTHH:mm:ss+05:30'),
+            dates: savedAttendance.dates.map(entry => ({
+                ...entry,
+                date: moment(entry.date).tz('Asia/Kolkata').format('YYYY-MM-DDTHH:mm:ss+05:30')
+            }))
+        };
+
+        res.json(formattedAttendance);
+    } catch (error) {
+        console.log('Error:', error);
+        res.status(400).json({ message: error.message });
+    }
+});
 
 
 
@@ -301,50 +266,50 @@ router.put('/update/:id', async (req, res) => {
 // });
 
 // update attendance using studentID 
-router.put('/updates/:studentId', async (req, res) => {
-    try {
-        const { studentId } = req.params;
-        const { present, updateDate } = req.body;
+// router.put('/updates/:studentId', async (req, res) => {
+//     try {
+//         const { studentId } = req.params;
+//         const { present, updateDate } = req.body;
 
-        if (typeof present !== 'boolean') {
-            return res.status(400).json({ message: 'Invalid value for present' });
-        }
+//         if (typeof present !== 'boolean') {
+//             return res.status(400).json({ message: 'Invalid value for present' });
+//         }
 
-        // Fetch attendance record by studentId
-        const attendance = await Attendance.findOne({ studentId });
+//         // Fetch attendance record by studentId
+//         const attendance = await Attendance.findOne({ studentId });
 
-        if (!attendance) {
-            return res.status(404).json({ message: 'Attendance record not found' });
-        }
+//         if (!attendance) {
+//             return res.status(404).json({ message: 'Attendance record not found' });
+//         }
 
-        const currentDate = updateDate ? new Date(updateDate) : new Date();
-        currentDate.setUTCHours(0, 0, 0, 0); // Normalize to start of the day
-        const dateString = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+//         const currentDate = updateDate ? new Date(updateDate) : new Date();
+//         currentDate.setUTCHours(0, 0, 0, 0); // Normalize to start of the day
+//         const dateString = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD format
 
-        // Check if the date already exists in the array
-        const existingEntry = attendance.dates.find(entry => entry.date.toISOString().split('T')[0] === dateString);
+//         // Check if the date already exists in the array
+//         const existingEntry = attendance.dates.find(entry => entry.date.toISOString().split('T')[0] === dateString);
 
-        if (existingEntry) {
-            // Update the existing entry
-            existingEntry.present = present;
-        } else {
-            // Add a new entry
-            attendance.dates.push({ date: currentDate, present });
-        }
+//         if (existingEntry) {
+//             // Update the existing entry
+//             existingEntry.present = present;
+//         } else {
+//             // Add a new entry
+//             attendance.dates.push({ date: currentDate, present });
+//         }
 
-        attendance.present = present;
-        attendance.date = currentDate;
-        // Save the updated attendance record
-        await attendance.save();
+//         attendance.present = present;
+//         attendance.date = currentDate;
+//         // Save the updated attendance record
+//         await attendance.save();
 
-        // Log the updated state of the dates
-        console.log(`Updated attendance dates for student ${attendance.studentId}:`, attendance.dates);
+//         // Log the updated state of the dates
+//         console.log(`Updated attendance dates for student ${attendance.studentId}:`, attendance.dates);
 
-        res.json(attendance);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
-});
+//         res.json(attendance);
+//     } catch (error) {
+//         res.status(400).json({ message: error.message });
+//     }
+// });
 // get attendance using studentID
 
 router.get('/gets/:studentId', async (req, res) => {

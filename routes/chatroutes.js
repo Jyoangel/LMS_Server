@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const router = express.Router();
 const Chat = require('../Models/Chat');
@@ -9,15 +10,15 @@ const socketIo = require('socket.io');
 
 // Cloudinary configuration
 cloudinary.config({
-    cloud_name: 'dsnfr8q1u',
-    api_key: '721714419449564',
-    api_secret: 'AwzrmpiCFz9CxwSGWwRdAx9d9ok',
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
     cors: {
-        origin: "http://localhost:3000",
+        origin: process.env.CORS_ORIGIN,
         methods: ["GET", "POST"]
     }
 });

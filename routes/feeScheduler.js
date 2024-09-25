@@ -1,3 +1,4 @@
+require('dotenv').config();
 const cron = require('node-cron');
 const moment = require('moment');
 const mongoose = require('mongoose');
@@ -7,11 +8,11 @@ const nodemailer = require('nodemailer');
 const twilio = require('twilio');
 
 // Configure Twilio for sending SMS
-const accountSid = 'AC436e757eac2bdce1f9addce2c69e0ea7';
-const authToken = '36275a40fb703c301d0bc15ba68af2eb';
-const client = twilio(accountSid, authToken);
-const EMAIL_USER = 'jyo209gup201@gmail.com'
-const EMAIL_PASS = 'endr hamj dblu rhiu'
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASS = process.env.EMAIL_PASS;
+const TWILIO_SID = process.env.TWILIO_SID;
+const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
+const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER;
 
 // Configure nodemailer for sending emails
 const transporter = nodemailer.createTransport({
@@ -21,6 +22,9 @@ const transporter = nodemailer.createTransport({
         pass: EMAIL_PASS,
     }
 });
+
+// Configure Twilio
+const client = twilio(TWILIO_SID, TWILIO_AUTH_TOKEN);
 
 // Function to format phone numbers
 const formatPhoneNumber = (phoneNumber) => {
@@ -74,7 +78,7 @@ cron.schedule('0 9 * * *', async () => {
 
                     // Send email
                     await transporter.sendMail({
-                        from: 'your-email@gmail.com',
+                        from: EMAIL_USER,
                         to: email,
                         subject: 'Fee Due Notice',
                         text: emailContent,
@@ -85,7 +89,7 @@ cron.schedule('0 9 * * *', async () => {
                     if (formattedContactNumber) {
                         await client.messages.create({
                             body: `Dear ${name}, your fee for ${currentMonth} is unpaid. Total dues: ${totalDues}. Please submit it.`,
-                            from: '+13344014487', // Your Twilio number
+                            from: TWILIO_PHONE_NUMBER,// Your Twilio number
                             to: formattedContactNumber,
                         });
 

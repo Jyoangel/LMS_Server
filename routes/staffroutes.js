@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const Staff = require('../Models/StaffDetails');
@@ -9,9 +10,9 @@ const xlsx = require('xlsx');
 const Message = require('../Models/Message');
 const nodemailer = require('nodemailer');
 
-require('dotenv').config();
-const EMAIL_USER = 'jyo209gup201@gmail.com'
-const EMAIL_PASS = 'endr hamj dblu rhiu'
+
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASS = process.env.EMAIL_PASS;
 
 
 // Configure Nodemailer

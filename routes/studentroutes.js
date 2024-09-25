@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const router = express.Router();
@@ -10,12 +11,11 @@ const Attendance = require('../Models/Attendance');
 const Message = require('../Models/Message');
 const nodemailer = require('nodemailer');
 const checkRole = require('../middleware/checkRole');
-require('dotenv').config();
-const EMAIL_USER = 'jyo209gup201@gmail.com'
-const EMAIL_PASS = 'endr hamj dblu rhiu'
-const TWILIO_SID = 'AC436e757eac2bdce1f9addce2c69e0ea7'
-const TWILIO_AUTH_TOKEN = '36275a40fb703c301d0bc15ba68af2eb'
-const TWILIO_PHONE_NUMBER = '+13344014487'
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASS = process.env.EMAIL_PASS;
+const TWILIO_SID = process.env.TWILIO_SID;
+const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
+const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER;
 
 // Configure Nodemailer
 const transporter = nodemailer.createTransport({

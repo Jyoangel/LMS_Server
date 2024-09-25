@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const router = express.Router();
 const nodemailer = require('nodemailer');
@@ -5,10 +6,10 @@ const Communication = require('../Models/Communication');
 const StudentDetail = require('../Models/StudentDetails');
 const Message = require('../Models/Message');
 const checkRole = require('../middleware/checkRole');
-require('dotenv').config();
 
-const EMAIL_USER = process.env.User
-const EMAIL_PASS = process.env.Pass;
+
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASS = process.env.EMAIL_PASS;
 
 // Configure Nodemailer
 const transporter = nodemailer.createTransport({

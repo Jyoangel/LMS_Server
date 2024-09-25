@@ -12,7 +12,7 @@ const cookieParser = require('cookie-parser');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
-const Chat = require('../Server/Models/Chat');
+
 require('./routes/feeScheduler');
 // Importing routes
 const loginRoutes = require('./routes/authroutes/loginroutes');
@@ -50,14 +50,14 @@ const attendanceRoutes = require('./routes/attendanceroutes');
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: process.env.CORS_ORIGIN,
   credentials: true,
 }));
 //http://192.168.6.152:3000
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: 'http://localhost:3000',
+    origin: process.env.CORS_ORIGIN,
     methods: ["GET", "POST"]
   }
 });
@@ -181,7 +181,7 @@ const connectDB = require('./config/db');
 connectDB();
 
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: process.env.CORS_ORIGIN,
   credentials: true,
 }));
 app.use(express.json());
