@@ -196,7 +196,7 @@ router.get('/check-role', async (req, res) => {
         if (teacher) {
             res.json({ role: 'Teacher' });
         } else {
-            res.json({ role: 'Teacher' });
+            res.json({ role: 'Student' });
         }
     } catch (error) {
         res.status(500).json({ error: 'Internal Server Error' });
