@@ -188,21 +188,22 @@ router.get('/count', async (req, res) => {
     }
 });
 
+// Check if email exists in the Teacher schema
 router.get('/check-role', async (req, res) => {
     const { email } = req.query;
 
     try {
         const teacher = await Teacher.findOne({ email });
         if (teacher) {
-            res.json({ role: 'Teacher' });
-        } else {
-            res.json({ role: 'Teacher' });
+            return res.status(200).json({ exists: true, role: 'Teacher' });
         }
+        return res.status(404).json({ exists: false });
     } catch (error) {
-        res.status(500).json({ error: 'Internal Server Error' });
-        res.status(400).json({ message: error.message });
+        console.error('Error checking teacher role:', error);
+        return res.status(500).json({ error: 'Internal server error' });
     }
 });
+
 
 
 router.put('/selectTeacher/:teacherID', async (req, res) => {

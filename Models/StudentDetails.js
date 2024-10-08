@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const moment = require('moment-timezone');
 const { Schema } = mongoose;
 const parentSchema = require('./Parent');
 const localGuardianSchema = require('./LocalGuardian');
@@ -96,7 +97,7 @@ const studentSchema = new Schema({
     monthlyFee: {
         type: Number,
         default: function () {
-            return this.totalFee / 12;
+            return parseFloat((this.totalFee / 12).toFixed(2));
         }
     },
     session: {
@@ -127,14 +128,6 @@ studentSchema.post('save', async function (doc) {
     try {
         const communication = new Communication({
             studentID: doc.studentID,
-            name: doc.name,
-            dateOfBirth: doc.dateOfBirth,
-            class: doc.class,
-            gender: doc.gender,
-            aadharNumber: doc.aadharNumber,
-            fatherName: doc.parent.fatherName,
-            contactNumber: doc.contactNumber,
-            email: doc.email,
             selected: false // Default selected value
         });
         await communication.save();
