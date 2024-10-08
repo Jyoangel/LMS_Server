@@ -2,6 +2,10 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const classScheduleSchema = new Schema({
+    class: {
+        type: String,
+        required: true, // This field is required to associate the schedule with a class
+    },
     subject: {
         type: String,
         required: true,

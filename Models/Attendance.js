@@ -1,10 +1,7 @@
 const mongoose = require('mongoose');
-const moment = require('moment-timezone');
 
-// Function to get the current date in IST (Asia/Kolkata)
-// const getCurrentDateIST = () => {
-//     return moment.tz('Asia/Kolkata').toDate(); // Get current date as a Date object in IST
-// };
+
+
 const attendanceSchema = new mongoose.Schema({
     studentId: {
         type: mongoose.Schema.Types.ObjectId,

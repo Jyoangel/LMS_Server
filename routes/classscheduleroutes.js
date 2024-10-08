@@ -39,6 +39,25 @@ router.get('/get/:id', async (req, res) => {
     }
 });
 
+// Route to get class schedule by class
+router.get('/class', async (req, res) => {
+    const { class: className } = req.query;
+
+    try {
+        // Find the class schedule by class
+        const schedule = await ClassSchedule.find({ class: className });
+
+        if (!schedule.length) {
+            return res.status(404).json({ message: 'No schedule found for the specified class' });
+        }
+
+        res.status(200).json(schedule);
+    } catch (error) {
+        console.error('Error fetching class schedule:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // Update class schedule by ID
 router.put('/update/:id', async (req, res) => {
     try {

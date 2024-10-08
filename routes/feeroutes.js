@@ -116,8 +116,16 @@ router.post('/add', async (req, res) => {
         // Calculate paidAmount based on feePaid and otherFee
         const paidAmount = feePaid + otherFee;
 
-        // Calculate dueAmount for this month
-        const dueAmount = monthlyFee - paidAmount;
+        // Initialize extraFee and dueAmount
+        let extraFee = 0;
+        let dueAmount = 0;
+
+        // Determine extraFee and dueAmount based on paidAmount and monthlyFee
+        if (paidAmount > monthlyFee) {
+            extraFee = paidAmount - monthlyFee;
+        } else {
+            dueAmount = monthlyFee - paidAmount;
+        }
 
         // Calculate totalDues (remaining balance) for the student
         const totalPaid = await Fee.aggregate([
@@ -125,10 +133,7 @@ router.post('/add', async (req, res) => {
             { $group: { _id: null, totalPaidAmount: { $sum: "$paidAmount" } } }
         ]);
 
-        // const totalPaid = await Fee.aggregate([
-        //     { $match: { studentID: student._id } },
-        //     { $group: { _id: null, totalPaidAmount: { $sum: "$paidAmount" } } }
-        // ]);
+
 
         totalDues = student.totalFee - (totalPaid[0]?.totalPaidAmount || 0) - paidAmount;
         // Determine status based on dueAmount
@@ -140,6 +145,7 @@ router.post('/add', async (req, res) => {
             feePaid,
             otherFee,
             paidAmount,
+            extraFee,
             total: paidAmount,  // Total for this transaction
             dueAmount,
             totalDues,          // Due amount for this transaction
@@ -155,16 +161,7 @@ router.post('/add', async (req, res) => {
         const fee = await newFee.save();
         console.log('Saved fee:', fee);
 
-        // Prepare and save FeeNotice
-        const feeNotice = new FeeNotice({
-            fee: fee._id,
-            message: 'Default message',  // Replace with actual message
-            remark: 'Default remark',    // Replace with actual remark
-            dueAmount: totalDues,        // Total due amount across months
-            months: feeMonth             // Month(s) related to this fee
-        });
 
-        await feeNotice.save();
 
         res.status(201).json({ msg: 'Fee record created successfully', fee });
     } catch (err) {

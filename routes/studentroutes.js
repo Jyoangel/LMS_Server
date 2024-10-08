@@ -223,6 +223,24 @@ router.delete('/delete/:id', async (req, res) => {
 });
 
 
+// GET /api/student/email/:email - Fetch student by email
+router.get('/student/email/:email', async (req, res) => {
+    console.log(`Received request for email: ${req.params.email}`); // Log the email being requested
+    const { email } = req.params;
+
+    try {
+        const student = await StudentDetail.findOne({ email: email });
+        console.log(`Found student: ${student}`); // Log the student found
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found' });
+        }
+        res.status(200).json(student);
+    } catch (error) {
+        console.error('Error fetching student data:', error);
+        res.status(500).json({ message: 'Error fetching student data', error });
+    }
+});
+
 // route to select student 
 router.put('/selectStudent/:studentId', async (req, res) => {
     const { studentId } = req.params;
@@ -388,6 +406,23 @@ router.get('/count', async (req, res) => {
         res.status(500).json(error);
     }
 });
+// Check if email exists in the Student schema
+router.get('/student/check-role', async (req, res) => {
+    const { email } = req.query;
+
+    try {
+        const student = await StudentDetail.findOne({ email });
+        if (student) {
+            return res.status(200).json({ exists: true, role: 'Student' });
+        }
+        return res.status(404).json({ exists: false });
+    } catch (error) {
+        console.error('Error checking student role:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
 
 module.exports = router;
 
