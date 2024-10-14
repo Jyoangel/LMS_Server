@@ -179,8 +179,8 @@ app.use(session({
   cookie: { secure: true, httpOnly: true }
 }));
 
- // const connectDB = require('./config/db');
- // connectDB();
+ const connectDB = require('./config/db');
+ connectDB();
 
 app.use(cors({
   origin: process.env.CORS_ORIGIN,
