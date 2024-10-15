@@ -12,7 +12,7 @@ const connectDB = async (dbName) => {
         }
 
         // If a connection exists but to a different DB, disconnect first
-        if (mongoose.connection.readyState === 1) {
+        if (mongoose.connection.readyState === 1 && mongoose.connection.name !== dbName) {
             console.log(`Disconnecting from current database: ${mongoose.connection.name}`);
             await mongoose.disconnect();
         }
