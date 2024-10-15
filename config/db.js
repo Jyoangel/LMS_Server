@@ -5,10 +5,7 @@ const URI = process.env.MONGODB_URI;
 
 const connectDB = async (dbName) => {
     try {
-        if (!dbName) {
-            console.log('Database name is undefined, skipping connection.');
-            return;
-        }
+        
         // If already connected to the desired database, skip reconnection
         if (mongoose.connection.readyState === 1 && mongoose.connection.name === dbName) {
             console.log(`Already connected to database: ${dbName}`);
