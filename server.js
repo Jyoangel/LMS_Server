@@ -180,7 +180,7 @@ app.use(session({
 }));
 
  const connectDB = require('./config/db');
- //connectDB();
+ connectDB();
 
 app.use(cors({
   origin: process.env.CORS_ORIGIN,
