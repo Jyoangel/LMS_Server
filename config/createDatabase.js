@@ -1,7 +1,7 @@
 const mongoose = require('mongoose'); // Require Mongoose at the top
 const express = require('express');
 const router = express.Router();
-const connectDB = require('./config/db'); // Assuming you have a separate connectDB function
+const connectDB = require('./db'); // Assuming you have a separate connectDB function
 
 // POST route for creating and switching databases
 router.post('/create-database', async (req, res) => {
