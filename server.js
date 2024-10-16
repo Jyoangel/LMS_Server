@@ -46,7 +46,7 @@ const calendarRoutes = require('./routes/calendarroutes');
 const chatRoutes = require('./routes/chatroutes');
 const attendanceRoutes = require('./routes/attendanceroutes');
 const adminUserRoutes = require('./routes/adminUser')
-//const adminCreateRoutes = require('./config/createDatabase')
+const adminCreateRoutes = require('./config/createDatabase')
 
 const app = express();
 
@@ -196,23 +196,23 @@ app.use(session({
 //   next(); // Proceed to the next middleware or route handler
 // });
 
-app.post('api/admin/create-database', async (req, res) => {
-    const { dbName } = req.body;
-    console.log("Res", dbName);// Connect to the new database
+// app.post('api/admin/create-database', async (req, res) => {
+//     const { dbName } = req.body;
+//     console.log("Res", dbName);// Connect to the new database
 
-    if (!dbName) {
-        return res.status(400).json({ error: 'Database name is required' });
-    }
+//     if (!dbName) {
+//         return res.status(400).json({ error: 'Database name is required' });
+//     }
 
-    try {
+//     try {
 
-        const response = await connectDB(dbName);
-        console.log("Resss", response);// Connect to the new database
-        res.status(200).json({ message: `Database ${dbName} created successfully` });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to create database', details: error.message });
-    }
-});
+//         const response = await connectDB(dbName);
+//         console.log("Resss", response);// Connect to the new database
+//         res.status(200).json({ message: `Database ${dbName} created successfully` });
+//     } catch (error) {
+//         res.status(500).json({ error: 'Failed to create database', details: error.message });
+//     }
+// });
 
 
 app.use(cors({
@@ -259,7 +259,7 @@ app.use("/api/calendar", calendarRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/user", adminUserRoutes);
-//app.use("/api/admin", adminCreateRoutes);
+app.use("/api/admin", adminCreateRoutes);
 
 const port = process.env.PORT || 5000;
 
