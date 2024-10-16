@@ -180,7 +180,7 @@ app.use(express.json());
 // }));
 
  const connectDB = require('./config/db');
- connectDB();
+ //connectDB();
 app.use(async (req, res, next) => {
 
   const dbName = req.body.dbName ;
