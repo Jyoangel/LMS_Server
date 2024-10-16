@@ -184,7 +184,7 @@ app.use(session({
 app.use(async (req, res, next) => {
 
   const dbName = req.body.dbName;
-  console.log("Ressp", req.body);// Assuming dbName is based on user's Auth0 sub
+  console.log("Ressp", dbName);// Assuming dbName is based on user's Auth0 sub
 
   if (dbName) {
     try {
