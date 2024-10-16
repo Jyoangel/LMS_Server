@@ -183,7 +183,7 @@ app.use(express.json());
  //connectDB();
 app.use(async (req, res, next) => {
 
-  const dbName = req.body.dbName;
+  const dbName = req.body.dbName || 'test';
   console.log("Ressp", dbName);// Assuming dbName is based on user's Auth0 sub
 
   if (dbName) {
