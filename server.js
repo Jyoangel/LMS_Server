@@ -172,12 +172,12 @@ io.on('connection', (socket) => {
 */}
 app.use(cookieParser());
 app.use(express.json());
-app.use(session({
-  secret: '5c69a3691b9269010ce3f516d894af1106a7b15015b7442e62643a09154e18c6d451d28ce47dce76c8c794a67cc0cc61f56eabc6520f44aa0acf2321112bb9eb',
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: true, httpOnly: true }
-}));
+// app.use(session({
+//   secret: '5c69a3691b9269010ce3f516d894af1106a7b15015b7442e62643a09154e18c6d451d28ce47dce76c8c794a67cc0cc61f56eabc6520f44aa0acf2321112bb9eb',
+//   resave: false,
+//   saveUninitialized: true,
+//   cookie: { secure: true, httpOnly: true }
+// }));
 
  const connectDB = require('./config/db');
  //connectDB();
