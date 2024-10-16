@@ -171,7 +171,7 @@ io.on('connection', (socket) => {
 });
 */}
 app.use(cookieParser());
-
+app.use(express.json());
 app.use(session({
   secret: '5c69a3691b9269010ce3f516d894af1106a7b15015b7442e62643a09154e18c6d451d28ce47dce76c8c794a67cc0cc61f56eabc6520f44aa0acf2321112bb9eb',
   resave: false,
@@ -180,13 +180,27 @@ app.use(session({
 }));
 
  const connectDB = require('./config/db');
- connectDB();
+ //connectDB();
+app.use(async (req, res, next) => {
+
+  const dbName = req.body.dbName;
+  console.log("Ressp", req.body);// Assuming dbName is based on user's Auth0 sub
+
+  if (dbName) {
+    try {
+      await connectDB(dbName); // Connect to the user's specific database
+    } catch (err) {
+      return res.status(500).json({ error: 'Failed to switch database' });
+    }
+  }
+  next(); // Proceed to the next middleware or route handler
+});
 
 app.use(cors({
   origin: process.env.CORS_ORIGIN,
   credentials: true,
 }));
-app.use(express.json());
+
 //app.use('/uploads', express.static('uploads'));
 
 
