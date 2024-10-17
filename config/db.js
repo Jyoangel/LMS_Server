@@ -3,37 +3,50 @@ require('dotenv').config();
 
 const URI = process.env.MONGODB_URI;
 
-// In-memory connection cache
-const connectionCache = {};
+let isConnected; // Track connection status
 
 const connectDB = async (dbName) => {
     try {
-        // Check if a connection to this database already exists in the cache
-        if (connectionCache[dbName] && connectionCache[dbName].readyState === 1) {
-            console.log(`Using existing connection to database: ${dbName}`);
-            return connectionCache[dbName];
+        // Check if already connected to the desired database
+        if (isConnected && mongoose.connection.name === dbName) {
+            console.log(`Already connected to database: ${dbName}`);
+            return;
         }
 
-        // If a connection exists but to a different DB, we disconnect first
-        if (mongoose.connection.readyState === 1 && mongoose.connection.name !== dbName) {
+        // If connected to a different DB, disconnect first
+        if (isConnected) {
             console.log(`Disconnecting from current database: ${mongoose.connection.name}`);
             await mongoose.disconnect();
         }
 
-        // Establish a new connection and store it in the cache
-        const connection = await mongoose.createConnection(URI, { dbName });
-        connectionCache[dbName] = connection;
-
+        // Establish a new connection
+        await mongoose.connect(URI, {
+            dbName,
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        });
+        isConnected = true; // Set connection status to true
         console.log(`Connected to database: ${dbName}`);
-        return connection;
+
+        // Handle connection events
+        mongoose.connection.on('error', (err) => {
+            console.error('MongoDB connection error:', err);
+            isConnected = false; // Set connection status to false on error
+        });
+
+        mongoose.connection.on('disconnected', () => {
+            console.log(`Disconnected from database: ${dbName}`);
+            isConnected = false; // Update connection status
+        });
     } catch (error) {
         console.error(`Failed to connect to database: ${dbName}`);
         console.error('Error:', error);
-        throw error;
+        isConnected = false; // Update connection status on error
     }
 };
 
 module.exports = connectDB;
+
 
 
 
