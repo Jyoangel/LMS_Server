@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-// const URI = process.env.MONGODB_URI;
+ const URI = process.env.MONGODB_URI;
 let isConnected; // track connection status
 
 const connectDB = async (dbName) => {
