@@ -3,31 +3,38 @@ require('dotenv').config();
 
 const URI = process.env.MONGODB_URI;
 
+// In-memory connection cache
+const connectionCache = {};
+
 const connectDB = async (dbName) => {
     try {
-        
-        // If already connected to the desired database, skip reconnection
-        if (mongoose.connection.readyState === 1 && mongoose.connection.name === dbName) {
-            console.log(`Already connected to database: ${dbName}`);
-            return;
+        // Check if a connection to this database already exists in the cache
+        if (connectionCache[dbName] && connectionCache[dbName].readyState === 1) {
+            console.log(`Using existing connection to database: ${dbName}`);
+            return connectionCache[dbName];
         }
 
-        // If a connection exists but to a different DB, disconnect first
+        // If a connection exists but to a different DB, we disconnect first
         if (mongoose.connection.readyState === 1 && mongoose.connection.name !== dbName) {
             console.log(`Disconnecting from current database: ${mongoose.connection.name}`);
             await mongoose.disconnect();
         }
 
-        // Establish a new connection
-        await mongoose.connect(URI, { dbName });
+        // Establish a new connection and store it in the cache
+        const connection = await mongoose.createConnection(URI, { dbName });
+        connectionCache[dbName] = connection;
+
         console.log(`Connected to database: ${dbName}`);
+        return connection;
     } catch (error) {
         console.error(`Failed to connect to database: ${dbName}`);
         console.error('Error:', error);
+        throw error;
     }
 };
 
 module.exports = connectDB;
+
 
 
 // const mongoose = require('mongoose');
