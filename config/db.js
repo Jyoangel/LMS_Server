@@ -23,9 +23,12 @@ const connectDB = async (dbName) => {
         }
 
         // Establish a new connection
-        await mongoose.connect(URI, {
-            dbName
-        });
+        // await mongoose.connect(URI, {
+        //     dbName
+        // });
+const newURI = `${URI}/${dbName}`;
+await mongoose.connect(newURI);
+
         isConnected = true; // Set connection status to true
         console.log(`Connected to database: ${dbName}`);
 
