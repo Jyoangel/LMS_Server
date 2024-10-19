@@ -215,10 +215,10 @@ app.use(session({
 // });
 
 
-app.use(cors({
-  origin: process.env.CORS_ORIGIN,
-  credentials: true,
-}));
+// app.use(cors({
+//   origin: process.env.CORS_ORIGIN,
+//   credentials: true,
+// }));
 
 //app.use('/uploads', express.static('uploads'));
 
