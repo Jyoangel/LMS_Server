@@ -129,30 +129,79 @@ router.post('/import', upload.single('file'), async (req, res) => {
     }
 });
 
-
-// Create a new student
 router.post('/add', async (req, res) => {
     try {
-        const student = new StudentDetail(req.body);
+        const { userId, ...studentData } = req.body;
+
+        // Decode the userId if it was URL-encoded
+        const decodedUserId = decodeURIComponent(userId);
+
+        if (!decodedUserId) {
+            return res.status(400).json({ message: 'userId is required' });
+        }
+
+        const student = new StudentDetail({
+            ...studentData,
+            userId: decodedUserId, // Ensure the decoded userId is saved with the student data
+        });
+
         await student.save();
-        const count = await StudentDetail.countDocuments();
+
+        const count = await StudentDetail.countDocuments({ userId: decodedUserId });
         res.status(201).json({ student, message: `The total number of students is: ${count}` });
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
 });
 
-// Get all students
+
+
+
 router.get('/get', async (req, res) => {
     try {
-        const students = await StudentDetail.find();
-        const count = await StudentDetail.countDocuments();
-        res.status(200).json({ students, message: `The total number of students is: ${count}` });
-    } catch
-    (error) {
+        const { userId } = req.query; // Extract userId from query string
+
+        // Fetch students associated with the provided userId
+        const students = await StudentDetail.find({ userId: userId });
+
+        if (!students || students.length === 0) {
+            return res.status(404).json({ message: 'No students found for this user' });
+        }
+
+        // Count total number of students for this userId
+        const count = await StudentDetail.countDocuments({ userId: userId });
+
+        res.status(200).json({ students, message: `The total number of students for this user is: ${count}` });
+    } catch (error) {
         res.status(400).json({ error: error.message });
     }
 });
+
+
+
+// Create a new student
+// router.post('/add', async (req, res) => {
+//     try {
+//         const student = new StudentDetail(req.body);
+//         await student.save();
+//         const count = await StudentDetail.countDocuments();
+//         res.status(201).json({ student, message: `The total number of students is: ${count}` });
+//     } catch (error) {
+//         res.status(400).json({ message: error.message });
+//     }
+// });
+
+// // Get all students
+// router.get('/get', async (req, res) => {
+//     try {
+//         const students = await StudentDetail.find();
+//         const count = await StudentDetail.countDocuments();
+//         res.status(200).json({ students, message: `The total number of students is: ${count}` });
+//     } catch
+//     (error) {
+//         res.status(400).json({ error: error.message });
+//     }
+// });
 
 // Get a single student by ID
 router.get('/get/:studentID', async (req, res) => {
