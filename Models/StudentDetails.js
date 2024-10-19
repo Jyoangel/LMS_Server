@@ -121,6 +121,11 @@ const studentSchema = new Schema({
         type: String,
         required: true,
         default: getCurrentTimeIST
+    },
+    userId: {
+        type: String,
+        required: true,
+        unique: true
     }
 }, { timestamps: true });
 
