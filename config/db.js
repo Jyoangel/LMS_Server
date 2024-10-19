@@ -1,33 +1,33 @@
-require('dotenv').config();
-const mongoose = require('mongoose');
+// require('dotenv').config();
+// const mongoose = require('mongoose');
 
-const URI = process.env.MONGODB_URI;
+// const URI = process.env.MONGODB_URI;
 
-const connectDB = async (dbName) => {
-    try {
-        // Check if there's already a connection and if it's to the same database
-        if (mongoose.connection.readyState === 1 && mongoose.connection.name === dbName) {
-            console.log(`Already connected to database: ${dbName}`);
-            return; // No need to reconnect
-        }
+// const connectDB = async (dbName) => {
+//     try {
+//         // Check if there's already a connection and if it's to the same database
+//         if (mongoose.connection.readyState === 1 && mongoose.connection.name === dbName) {
+//             console.log(`Already connected to database: ${dbName}`);
+//             return; // No need to reconnect
+//         }
 
-        // If there's an existing connection to a different DB, disconnect first
-        if (mongoose.connection.readyState === 1 && mongoose.connection.name !== dbName) {
-            console.log(`Disconnecting from current database: ${mongoose.connection.name}`);
-            await mongoose.disconnect();
-        }
+//         // If there's an existing connection to a different DB, disconnect first
+//         if (mongoose.connection.readyState === 1 && mongoose.connection.name !== dbName) {
+//             console.log(`Disconnecting from current database: ${mongoose.connection.name}`);
+//             await mongoose.disconnect();
+//         }
 
-        // Connect to the new database
-        await mongoose.connect(URI, { dbName });
-        console.log(`Connected to database: ${dbName}`);
-    } catch (error) {
-        console.error(`Failed to connect to database: ${dbName}`);
-        console.error('Error:', error);
-        throw error; // Propagate the error
-    }
-};
+//         // Connect to the new database
+//         await mongoose.connect(URI, { dbName });
+//         console.log(`Connected to database: ${dbName}`);
+//     } catch (error) {
+//         console.error(`Failed to connect to database: ${dbName}`);
+//         console.error('Error:', error);
+//         throw error; // Propagate the error
+//     }
+// };
 
-module.exports = connectDB;
+// module.exports = connectDB;
 
 
 
@@ -103,23 +103,23 @@ module.exports = connectDB;
 //     }
 // }
 
-//module.exports = connectDB;
+module.exports = connectDB;
 
-// const mongoose = require('mongoose');
-// require('dotenv').config();
+const mongoose = require('mongoose');
+require('dotenv').config();
 
-// const URI = process.env.MONGODB_URI
+const URI = process.env.MONGODB_URI
 
-// const connectDB = async () => {
+const connectDB = async () => {
 
-//     try {
-//         await mongoose.connect(URI);
-//         console.log('Connected to database');
-//     } catch (error) {
-//         console.error("database is  not connected successfully")
-//         handleError(error);
-//     }
+    try {
+        await mongoose.connect(URI);
+        console.log('Connected to database');
+    } catch (error) {
+        console.error("database is  not connected successfully")
+        handleError(error);
+    }
 
 
-// }
-// module.exports = connectDB;
+}
+module.exports = connectDB;
