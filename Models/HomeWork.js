@@ -16,6 +16,11 @@ const homeworkSchema = new mongoose.Schema({
         type: String,  // assuming this is a URL or file path
         required: true
     },
+    userId: {
+        type: String,
+        required: true,
+
+    },
     undoneHomework: { type: Number, default: function () { return this.assignTo; } }
 });
 

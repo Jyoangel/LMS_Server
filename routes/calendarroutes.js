@@ -2,11 +2,18 @@ const express = require('express');
 const router = express.Router();
 const Calendar = require('../Models/Calendar');
 
+
 // Add new calendar event
 router.post('/add', async (req, res) => {
-    const { type, title, date, startTime, endTime, duration, description } = req.body;
+    const { userId, type, title, date, startTime, endTime, duration, description } = req.body;
     try {
-        const newEvent = new Calendar({ type, title, date, startTime, endTime, duration, description });
+        // Validate that userId is present
+        if (!userId) {
+            return res.status(400).json({ message: "User ID is required" });
+        }
+
+        // Create a new calendar event with userId
+        const newEvent = new Calendar({ userId, type, title, date, startTime, endTime, duration, description });
         const savedEvent = await newEvent.save();
         res.status(201).json(savedEvent);
     } catch (error) {
@@ -14,16 +21,24 @@ router.post('/add', async (req, res) => {
     }
 });
 
+
 // Get all calendar events
+// Get all calendar events for a specific user
 router.get('/get', async (req, res) => {
+    const { userId } = req.query;
     try {
-        const events = await Calendar.find();
+        // Validate that userId is present
+        if (!userId) {
+            return res.status(400).json({ message: "User ID is required" });
+        }
+
+        // Find calendar events for the specific user
+        const events = await Calendar.find({ userId });
         res.status(200).json(events);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
 });
-
 // Get calendar event by ID
 router.get('/get/:id', async (req, res) => {
     const { id } = req.params;

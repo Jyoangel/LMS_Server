@@ -107,12 +107,26 @@ router.post('/import', upload.single('file'), async (req, res) => {
 // Create a new teacher
 router.post('/add', async (req, res) => {
     try {
-        console.log("Request body:", req.body); // Log request body to check data being sent
-        const teacher = new Teacher(req.body);
+        const { userId, ...teacherData } = req.body;
+
+        // Decode the userId if it was URL-encoded
+        const decodedUserId = decodeURIComponent(userId);
+
+        if (!decodedUserId) {
+            return res.status(400).json({ message: 'userId is required' });
+        }
+
+        const teacher = new Teacher({
+            ...teacherData,
+            userId: decodedUserId, // Ensure the decoded userId is saved with the teacher data
+        });
+
         await teacher.save();
-        const count = await Teacher.countDocuments();
-        console.log("Teacher added successfully, total teachers:", count); // Log success
-        res.status(200).json({ teacher, message: `The total number of teachers is: ${count}` });
+
+        const count = await Teacher.countDocuments({ userId: decodedUserId });
+        console.log("Teacher added successfully, total teachers with this userId:", count);
+
+        res.status(201).json({ teacher, message: `The total number of teachers with this userId is: ${count}` });
     } catch (error) {
         console.error("Error while adding teacher:", error); // Log error for more details
         res.status(400).json({ message: error.message }); // Send detailed error response
@@ -120,16 +134,28 @@ router.post('/add', async (req, res) => {
 });
 
 
-// Get all teachers
+
 router.get('/get', async (req, res) => {
     try {
-        const teachers = await Teacher.find();
-        const count = await Teacher.countDocuments();
-        res.status(200).json({ teachers, message: `The total number of teachers is: ${count}` });
+        const { userId } = req.query;
+
+
+        // Fetch teachers based on userId
+        const teachers = await Teacher.find({ userId: userId });
+
+        if (teachers.length === 0) {
+            return res.status(404).json({ message: 'No teachers found for this userId' });
+        }
+
+        const count = await Teacher.countDocuments({ userId: userId });
+
+        res.status(200).json({ teachers });
     } catch (error) {
-        res.status(500).json(error);
+        console.error("Error fetching teachers by userId:", error);
+        res.status(500).json({ message: error.message });
     }
 });
+
 
 // Get a teacher by ID
 router.get('/get/:id', async (req, res) => {
@@ -180,22 +206,35 @@ router.delete('/delete/:id', async (req, res) => {
 
 router.get('/count', async (req, res) => {
     try {
-        const count = await Teacher.countDocuments();
-        const presentCount = await Teacher.countDocuments({ isPresent: true });
+        const { userId } = req.query; // Extract userId from query parameters
+
+        // Count documents that match the userId
+        const count = await Teacher.countDocuments({ userId });
+        const presentCount = await Teacher.countDocuments({ isPresent: true, userId }); // Count present teachers based on userId
+
         res.status(200).json({ count, presentCount });
     } catch (error) {
-        res.status(500).json(error);
+        console.error('Error fetching teacher count:', error);
+        res.status(500).json({ message: 'Server Error', error: error.message });
     }
 });
 
-// Check if email exists in the Teacher schema
+
+
+
+
 router.get('/check-role', async (req, res) => {
     const { email } = req.query;
 
     try {
         const teacher = await Teacher.findOne({ email });
         if (teacher) {
-            return res.status(200).json({ exists: true, role: 'Teacher' });
+            return res.status(200).json({
+                exists: true,
+                role: 'Teacher',
+                userId: teacher.userId,
+                teacherId: teacher._id // Include userId in the response
+            });
         }
         return res.status(404).json({ exists: false });
     } catch (error) {
@@ -203,8 +242,6 @@ router.get('/check-role', async (req, res) => {
         return res.status(500).json({ error: 'Internal server error' });
     }
 });
-
-
 
 
 router.put('/selectTeacher/:teacherID', async (req, res) => {

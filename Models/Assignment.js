@@ -28,7 +28,12 @@ const assignmentSchema = new mongoose.Schema({
     uploadAssignment: {
         type: String,  // assuming this is a URL or file path
         required: true
-    }
+    },
+    userId: {
+        type: String,
+        required: true,
+
+    },
 });
 
 const Assignment = mongoose.model('Assignment', assignmentSchema);

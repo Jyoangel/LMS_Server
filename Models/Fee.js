@@ -80,6 +80,10 @@ const feeSchema = new Schema({
     },
     srNo: {
         type: Number
+    },
+    userId: {
+        type: String,
+        required: true
     }
 }, { timestamps: true });
 

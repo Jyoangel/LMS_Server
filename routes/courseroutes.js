@@ -78,27 +78,27 @@ router.post('/import', upload.single('file'), async (req, res) => {
 
 router.get('/get', async (req, res) => {
     try {
-        // Fetch courses without populating liveClasses initially
-        const courses = await Course.find();
+        const { userId } = req.query; // Get userId from query parameters
 
-        // Iterate through courses and fetch liveClasses for each course
+        // Fetch courses for the specific userId
+        const courses = await Course.find({ userId });
+
+        // Populate liveClasses for each course
         const populatedCourses = await Promise.all(courses.map(async (course) => {
             const populatedCourse = course.toJSON(); // Convert Mongoose doc to plain object
-
-            // Fetch liveClasses for current course
             populatedCourse.liveClasses = await LiveClass.find({ courseId: course._id });
-
             return populatedCourse;
         }));
 
-        const count = populatedCourses.length; // Adjust as per your requirement
+        const count = populatedCourses.length;
 
-        res.status(200).json({ courses: populatedCourses, count, message: `The total number of courses is: ${count}` });
+        res.status(200).json({ courses: populatedCourses, count, message: `The total number of courses for user ${userId} is: ${count}` });
     } catch (err) {
         console.log('Error fetching courses:', err);
         res.status(500).json({ message: err.message });
     }
 });
+
 
 
 
@@ -119,22 +119,26 @@ router.get('/get/:id', async (req, res) => {
 // Add a new course
 router.post('/add', upload.single('uploadCourse'), async (req, res) => {
     try {
-        // Create a new course object
+        const { userId } = req.body; // Assuming userId is passed in the request body
+
+        // Create a new course object including userId
         const courseData = {
             ...req.body,
+            userId, // Add userId to the course data
             uploadCourse: req.file ? req.file.path : '' // Store the file path in uploadCourse field
         };
 
         const course = new Course(courseData);
         await course.save();
 
-        const count = await Course.countDocuments();
-        res.status(200).json({ course, message: `The total number of courses is: ${count}` });
+        const count = await Course.countDocuments({ userId }); // Count only the courses for the given userId
+        res.status(200).json({ course, message: `The total number of courses for user ${userId} is: ${count}` });
     } catch (error) {
         console.error('Error adding course:', error);
         res.status(400).json({ message: error.message });
     }
 });
+
 
 // Update a course by Id
 router.put('/update/:id', async (req, res) => {
@@ -166,12 +170,23 @@ router.delete('/delete/:id', async (req, res) => {
 // get count of course 
 router.get('/count', async (req, res) => {
     try {
-        const count = await Course.countDocuments();
-        res.status(200).json({ message: `The total number of courses is: ${count}` });
+        const { userId } = req.query; // Extract userId from the query parameters
+
+        // Check if userId is provided
+        if (!userId) {
+            return res.status(400).json({ message: 'userId is required' });
+        }
+
+        // Count the number of courses for the specific userId
+        const count = await Course.countDocuments({ userId });
+
+        res.status(200).json({ message: `The total number of courses for user ${userId} is: ${count}` });
     } catch (error) {
-        res.status(500).json(error);
+        console.error('Error fetching course count:', error);
+        res.status(500).json({ message: 'An error occurred while fetching the course count', error });
     }
 });
+
 
 // get course and live class data 
 router.get('/courses-with-live-classes', async (req, res) => {

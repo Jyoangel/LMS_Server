@@ -44,7 +44,12 @@ const examSchema = new mongoose.Schema({
     uploadQuestionPaper: {
         type: String,  // assuming this is a URL or file path
 
-    }
+    },
+    userId: {
+        type: String,
+        required: true,
+
+    },
 });
 
 const Exam = mongoose.model('Exam', examSchema);

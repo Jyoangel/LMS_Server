@@ -39,7 +39,8 @@ router.post('/add', upload.single('uploadAssignment'), async (req, res) => {
             class: class_,
             assignTo,
             courseDescription,
-            createdBy
+            createdBy,
+            userId
         } = req.body;
 
         // Get file path from the uploaded file
@@ -62,7 +63,8 @@ router.post('/add', upload.single('uploadAssignment'), async (req, res) => {
             assignTo,
             courseDescription,
             createdBy,
-            uploadAssignment,  // Include the file path
+            uploadAssignment,
+            userId  // Include the file path
         });
 
         await newAssignment.save();
@@ -77,14 +79,22 @@ router.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Get all assignments
 router.get('/get', async (req, res) => {
+    const userId = req.query.userId
+    if (!userId) {
+        return res.status(400).json({ message: 'User ID is required' });
+    }
+
     try {
-        const assignments = await Assignment.find();
-        const count = await getAssignmentCount();
+        // Find assignments based on userId
+        const assignments = await Assignment.find({ userId });
+        const count = await Assignment.countDocuments({ userId }); // Count assignments for this user
+
         res.json({ assignments, count });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 });
+
 
 // Get an assignment by ID
 router.get('/get/:id', async (req, res) => {

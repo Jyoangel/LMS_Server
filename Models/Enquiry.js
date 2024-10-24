@@ -18,7 +18,12 @@ const enquirySchema = new Schema({
     enquiryRelated: {
         type: String,
         required: true,
-    }
+    },
+    userId: {
+        type: String,
+        required: true,
+
+    },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Enquiry', enquirySchema);

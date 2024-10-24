@@ -45,15 +45,28 @@ const getLibraryCount = async () => {
 };
 
 // GET all library items
+// Get all library items for a specific user
 router.get('/get', async (req, res) => {
+    const { userId } = req.query; // Extract userId from query parameters
+
     try {
-        const libraryItems = await LibraryItem.find();
-        const count = await getLibraryCount();
-        res.json({ libraryItems, count });
+        // Validate that userId is provided
+        if (!userId) {
+            return res.status(400).json({ message: "User ID is required" });
+        }
+
+        // Fetch library items based on userId
+        const libraryItems = await LibraryItem.find({ userId });
+
+        // Get the count of library items for the specific user
+        const count = await LibraryItem.countDocuments({ userId });
+
+        res.status(200).json({ libraryItems, count });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 });
+
 
 // GET a specific library item
 router.get('/get/:id', getLibraryItem, (req, res) => {

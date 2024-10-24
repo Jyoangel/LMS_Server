@@ -25,7 +25,12 @@ const classScheduleSchema = new Schema({
     period: {
         type: String,
         required: true,
-    }
+    },
+    userId: {
+        type: String,
+        required: true,
+
+    },
 }, {
     timestamps: true
 });

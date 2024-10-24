@@ -10,6 +10,11 @@ const calendarSchema = new Schema({
     endTime: { type: String, required: true },
     duration: { type: String, required: true },
     description: { type: String, required: true },
+    userId: {
+        type: String,
+        required: true,
+
+    },
 }, { timestamps: true });
 // Pre-save middleware to set startDate and endDate based on IST timezone
 calendarSchema.pre('save', function (next) {

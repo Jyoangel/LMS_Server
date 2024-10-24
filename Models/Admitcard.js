@@ -79,6 +79,7 @@ const AdmitCardSchema = new Schema({
         }
     },
 
+
 });
 
 // Create model from schema

@@ -31,8 +31,14 @@ const reportCardSchema = new mongoose.Schema({
     principleSignature: { type: String, required: true, default: 'Principal Default Signature' }, // Default principal signature
     status: { type: String, enum: ['Pass', 'Fail'], required: true, default: 'Fail' },
     ReportCard: { type: String, default: 'Report card' },
+    userId: {
+        type: String,
+        required: true,
+
+    },
     date: { type: Date, default: getCurrentDateIST },  // IST date
-    time: { type: String, default: getCurrentTimeIST }, // IST time
+    time: { type: String, default: getCurrentTimeIST },
+    // IST time
 }, {
     toJSON: { virtuals: true },
     toObject: { virtuals: true }
@@ -77,6 +83,7 @@ reportCardSchema.statics.createFromAdmitCard = async function (admitCardId, repo
                 marks: reportCardData.marks[subject.subject] || 0, // Marks provided in reportCardData
             })),
             classTeacher: reportCardData.classTeacher, // Provided in reportCardData
+            userId: reportCardData.userId,
             principleSignature: reportCardData.principleSignature || 'Principal Default Signature', // Default if not provided
         });
 
@@ -90,9 +97,9 @@ reportCardSchema.statics.createFromAdmitCard = async function (admitCardId, repo
 module.exports = mongoose.model('ReportCard', reportCardSchema);
 
 
-{
 
-    /*
+
+{/*
 
 const mongoose = require('mongoose');
 const AdmitCard = require('./AdmitCaard'); // Assuming AdmitCard schema is in another file

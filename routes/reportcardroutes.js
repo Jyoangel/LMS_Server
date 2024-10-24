@@ -22,10 +22,10 @@ const ReportCard = require('../Models/Reportcard');
 // Route to create a new ReportCard
 router.post('/add', async (req, res) => {
     try {
-        const { admitCardId, marks, classTeacher, principleSignature } = req.body;
+        const { userId, admitCardId, marks, classTeacher, principleSignature } = req.body;
 
         // Check for missing fields
-        if (!admitCardId || !marks || !classTeacher) {
+        if (!admitCardId || !marks || !classTeacher || !userId) {
             return res.status(400).json({
                 error: 'Missing required fields: reportCardId, marks, and classTeacher are required',
             });
@@ -41,6 +41,7 @@ router.post('/add', async (req, res) => {
 
         // Create the report card using the static method
         const reportCard = await ReportCard.createFromAdmitCard(admitCardId, {
+            userId,
             marks, // Marks for each subject provided in the request
             classTeacher,
             principleSignature, // Optional, will use default if not provided
@@ -84,15 +85,31 @@ router.get('/reportcard/:reportCardId', async (req, res) => {
 });
 
 // Route to get all ReportCards
+
 router.get('/get', async (req, res) => {
     try {
-        const reportCards = await ReportCard.find();
+        const { userId } = req.query;
+
+        // Check if userId is provided
+        if (!userId) {
+            return res.status(400).send({ error: 'userId is required' });
+        }
+
+        // Fetch report cards based on userId
+        const reportCards = await ReportCard.find({ userId }).populate('studentID', 'name class parent.fatherName dateOfBirth session');;
+
+        // Check if any report cards were found
+        if (reportCards.length === 0) {
+            return res.status(404).send({ message: 'No report cards found for this user' });
+        }
 
         res.send(reportCards);
     } catch (err) {
+        console.error('Error fetching report cards:', err);
         res.status(500).send(err);
     }
 });
+
 
 
 

@@ -52,34 +52,38 @@ router.get('/get', async (req, res) => {
 
 // Update Admin User by userId
 router.get('/adminUser/:userId', async (req, res) => {
-    const userId = decodeURIComponent(req.params.userId); // Decode the userId
+    const userId = decodeURIComponent(req.params.userId);
+    console.log('Fetching admin user with userId:', userId); // Log userId for debugging
 
     try {
-        // Find the user by userId
         const adminUser = await AdminUser.findOne({ userId });
-
         if (!adminUser) {
-            return res.status(404).json({ message: 'Admin user not found' });
+            console.log('User not found:', userId); // Log if user is not found
+            return res.status(404).json({ message: `Admin user with ID ${userId} not found` });
         }
 
+        console.log('Found admin user:', adminUser); // Log if user is found
         res.status(200).json(adminUser);
     } catch (error) {
         console.error("Error fetching admin user:", error);
-        res.status(500).json({ message: 'Error fetching admin user', error });
+        res.status(500).json({ message: 'Error fetching admin user', error: error.message });
     }
 });
 
 
-// Update Admin User by userId
+
+
 router.put('/adminUser/:userId', async (req, res) => {
-    console.log(`Received request to update admin user with ID: ${req.params.userId}`);
-    const { userId } = req.params;
+    // Decode the userId to handle special characters
+    const decodedUserId = decodeURIComponent(req.params.userId);
+    console.log(`Received request to update admin user with decoded ID: ${decodedUserId}`);
+
     const updateData = req.body;
 
     try {
-        // Find the user by userId and update with the new data
+        // Find the user by the decoded userId and update with the new data
         const updatedUser = await AdminUser.findOneAndUpdate(
-            { userId: userId },
+            { userId: decodedUserId },  // Use the decoded userId
             updateData,
             { new: true, runValidators: true } // Return the updated document and run validation
         );
@@ -94,6 +98,5 @@ router.put('/adminUser/:userId', async (req, res) => {
         res.status(500).json({ message: 'Error updating admin user', error });
     }
 });
-
 
 module.exports = router;

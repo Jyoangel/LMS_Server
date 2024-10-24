@@ -69,42 +69,46 @@ router.post('/add', async (req, res) => {
 // Create a new Admit Card
 router.post('/add', async (req, res) => {
     try {
-        const { class: inputClass, examination, startdate, enddate, examstarting_time, examending_time, examsubjects } = req.body;
+        const { userId, class: inputClass, examination, startdate, enddate, examstarting_time, examending_time, examsubjects } = req.body;
 
-        if (!inputClass) {
-            return res.status(400).json({ message: 'Class is required' });
+        // Validate class and userId input
+        if (!inputClass || !userId) {
+            return res.status(400).json({ message: 'Class and userId are required' });
         }
 
-        // Fetch students matching the input class
-        const students = await StudentDetail.find({ class: inputClass });
+        // Fetch students where both class and userId match
+        const students = await StudentDetail.find({ class: inputClass, userId });
 
         if (students.length === 0) {
-            return res.status(404).json({ message: `No students found for class ${inputClass}` });
+            return res.status(404).json({ message: `No students found for class ${inputClass} with userId ${userId}` });
         }
 
         let admitCards = [];
         let counter = 1; // Sequential number for examination roll
 
         for (const student of students) {
+            // Generate a unique examination roll number for each student
             const examination_roll_number = `${student.studentID}${student.admissionNumber}${Math.floor(Math.random() * 100)}${counter}`;
 
             const admitCardData = {
                 studentID: student._id, // Use studentID as ObjectId reference to StudentDetail
                 examination_roll_number,
-                examination: examination || 'Annual Examination', // Default examination value if not provided
+                examination: examination || 'Annual Examination', // Default to 'Annual Examination' if not provided
                 startdate,
                 enddate,
                 examstarting_time,
                 examending_time,
-                examsubjects: examsubjects || [], // Subjects should be provided in the request body
+                userId,
+
+                examsubjects: examsubjects || [], // Use provided subjects or default to an empty array
             };
 
-            const admitCard = new AdmitCard(admitCardData); // Correct model usage: AdmitCaard
-            admitCards.push(admitCard.save());
-            counter++; // Increment counter for next student
+            const admitCard = new AdmitCard(admitCardData); // Create admit card document
+            admitCards.push(admitCard.save()); // Save admit card for each student
+            counter++; // Increment counter for the next student
         }
 
-        // Save all admit cards
+        // Save all admit cards concurrently
         await Promise.all(admitCards);
 
         res.status(201).json({ message: `Admit cards created successfully for class ${inputClass}` });
@@ -113,6 +117,7 @@ router.post('/add', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
 
 
 // Get all Admit Cards
@@ -197,14 +202,6 @@ router.get('/gets/:studentID', async (req, res) => {
         res.status(500).json({ message: 'Internal server error', error: error.message });
     }
 });
-
-
-
-
-
-
-
-
 
 
 module.exports = router;

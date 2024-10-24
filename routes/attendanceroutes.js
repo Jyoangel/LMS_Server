@@ -30,10 +30,27 @@ router.post('/add', async (req, res) => {
 });
 
 // Route to get all attendance records with populated student details
+// router.get('/get', async (req, res) => {
+//     try {
+//         const attendance = await Attendance.findWithStudentDetails();
+//         const count = await getAttendanceCount();
+//         res.json({ attendance, count });
+//     } catch (error) {
+//         res.status(500).json({ message: error.message });
+//     }
+// });
+
+// Route to get attendance records by userId with populated student details
 router.get('/get', async (req, res) => {
+    const { userId } = req.query; // Get userId from the query parameters
+
     try {
-        const attendance = await Attendance.findWithStudentDetails();
-        const count = await getAttendanceCount();
+        // Find attendance records for the given userId and populate student details
+        const attendance = await Attendance.find({ userId }).populate('studentId', 'studentID name class dateOfBirth gender aadharNumber email parent.fatherName contactNumber address');
+
+        // Optionally, calculate attendance count (e.g., for pagination or summaries)
+        const count = await Attendance.countDocuments({ userId });
+
         res.json({ attendance, count });
     } catch (error) {
         res.status(500).json({ message: error.message });

@@ -44,15 +44,25 @@ router.post('/add', upload.single('uploadHomework'), async (req, res) => {
 router.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Get all Homework
+// Get Homework by userId
 router.get('/get', async (req, res) => {
+    const userId = req.query.userId
+
+    if (!userId) {
+        return res.status(400).json({ message: 'User ID is required' });
+    }
+
     try {
-        const homeworks = await Homework.find();
-        const count = await getHomeworkCount();
+        // Find homework based on userId
+        const homeworks = await Homework.find({ userId });
+        const count = await Homework.countDocuments({ userId }); // Count homework entries for this user
+
         res.json({ homeworks, count });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 });
+
 
 // Get Homework by ID
 router.get('/get/:id', async (req, res) => {

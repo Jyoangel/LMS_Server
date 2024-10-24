@@ -42,6 +42,11 @@ const librarySchema = new Schema({
         type: String,
         required: true
     },
+    userId: {
+        type: String,
+        required: true,
+
+    },
     uploadBookPdf: {
         type: String,  // assuming this is a URL or file path
         required: true

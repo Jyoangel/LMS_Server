@@ -7,6 +7,8 @@ const multer = require('multer');
 const fs = require('fs');
 const http = require('http');
 const socketIo = require('socket.io');
+const StudentDetail = require('../Models/StudentDetails');
+const Teacher = require('../Models/TeacherDetails');
 
 // Cloudinary configuration
 cloudinary.config({
@@ -98,6 +100,26 @@ router.post('/send', upload.single('file'), async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: 'Failed to send message' });
         console.log(error);
+    }
+});
+
+// server.js
+router.get('/fetchUsers', async (req, res) => {
+    const userId = req.query.userId; // Get userId from query parameters
+
+    try {
+        // Fetch teachers and students with the provided userId
+        const teachers = await Teacher.find({ userId }); // Adjust according to your actual field name
+        const students = await StudentDetail.find({ userId }); // Adjust according to your actual field name
+
+        // Combine teachers and students into a single array
+        const users = [...teachers, ...students];
+
+        // Respond with the filtered users
+        res.status(200).json(users);
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        res.status(500).json({ message: "Error fetching users" });
     }
 });
 

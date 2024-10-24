@@ -8,6 +8,10 @@ const attendanceSchema = new mongoose.Schema({
         ref: 'StudentDetail',
         required: true
     },
+    userId: {
+        type: String,
+        required: true
+    },
     present: {
         type: Boolean,
         required: true,
@@ -39,7 +43,7 @@ const Attendance = mongoose.model('Attendance', attendanceSchema);
 
 module.exports = Attendance;
 
-
+//auth0|6704ccd49ad8416b2bb55792
 
 // const mongoose = require('mongoose');
 

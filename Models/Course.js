@@ -52,6 +52,11 @@ const courseSchema = new Schema({
         type: String,  // assuming this is a URL or file path
 
     },
+    userId: {
+        type: String,
+        required: true,
+
+    },
     liveClasses: [{
         type: Schema.Types.ObjectId,
         ref: 'LiveClass'

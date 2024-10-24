@@ -1,8 +1,29 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 const emergencyContactSchema = require('./EmergencyContact');
+const moment = require('moment-timezone');
+const onlyAlphabets = (value) => /^[A-Za-z\s]+$/.test(value);
+// Aadhar number validation to check for invalid sequences
+const validAadharNumber = (value) => {
+    if (/(\d)\1{11}/.test(value)) {
+        return false; // Invalid if all digits are the same
+    }
+    return /^\d{12}$/.test(value); // Ensure it's exactly 12 digits
+};
 
+// Contact number validation to ensure no repetitive digits
+const validContactNumber = (value) => {
+    if (/(\d)\1{9}/.test(value)) {
+        return false; // Invalid if all digits are the same
+    }
+    return /^\d{10}$/.test(value); // Ensure it's exactly 10 digits
+};
 
+// Validate minimum age (5 years)
+const minimumAge = (value) => {
+    const ageDiff = moment().diff(moment(value), 'years');
+    return ageDiff >= 10;
+};
 const staffSchema = new Schema({
     staffID: {
         type: String,
@@ -11,11 +32,13 @@ const staffSchema = new Schema({
     },
     name: {
         type: String,
-        required: true
+        required: true,
+        validate: [onlyAlphabets, 'Name should contain only alphabetic characters']
     },
     dateOfBirth: {
         type: Date,
-        required: true
+        required: true,
+        validate: [minimumAge, 'Student must be at least 5 years old']
     },
     gender: {
         type: String,
@@ -24,7 +47,7 @@ const staffSchema = new Schema({
     contactNumber: {
         type: String,
         required: true,
-        match: [/^\d{10}$/, 'Please enter a valid 10-digit contact number']
+        validate: [validContactNumber, 'Please enter a valid 10-digit contact number. Avoid all identical digits.']
     },
     email: {
         type: String,
@@ -44,7 +67,7 @@ const staffSchema = new Schema({
         type: String,
         required: true,
         unique: true,
-        match: [/^\d{12}$/, 'Please enter a valid 12-digit Aadhar number']
+        validate: [validAadharNumber, 'Please enter a valid Aadhar number. Avoid all identical digits.']
     },
     position: {
         type: String,
@@ -69,6 +92,11 @@ const staffSchema = new Schema({
     salary: {
         type: Number,
         required: true
+    },
+    userId: {
+        type: String,
+        required: true,
+
     },
     selected: {
         type: Boolean,

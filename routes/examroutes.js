@@ -27,7 +27,7 @@ const getExamCount = async () => {
 // Add a new exam
 router.post('/add', upload.single('uploadQuestionPaper'), async (req, res) => {
     try {
-        const { type, examTitle, subject, date, startTime, endTime, duration, instruction, totalMarks, passingMarks } = req.body;
+        const { type, examTitle, subject, date, startTime, endTime, duration, instruction, totalMarks, passingMarks, userId } = req.body;
 
         // Create the exam object
         const exam = new Exam({
@@ -41,7 +41,8 @@ router.post('/add', upload.single('uploadQuestionPaper'), async (req, res) => {
             instruction,
             totalMarks,
             passingMarks,
-            uploadQuestionPaper: req.file ? req.file.path : null // Save file path if uploaded
+            uploadQuestionPaper: req.file ? req.file.path : null,// Save file path if uploaded
+            userId
         });
 
         // Save the exam to the database
@@ -55,15 +56,25 @@ router.post('/add', upload.single('uploadQuestionPaper'), async (req, res) => {
 
 router.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Get all exams
+// Get exams by userId
 router.get('/get', async (req, res) => {
+    const userId = req.query.userId
+
+    if (!userId) {
+        return res.status(400).send({ message: 'User ID is required' });
+    }
+
     try {
-        const exams = await Exam.find();
-        const count = await getExamCount();
+        // Find exams related to the userId
+        const exams = await Exam.find({ userId });
+        const count = await Exam.countDocuments({ userId }); // Count exams for this user
+
         res.status(200).send({ exams, count });
     } catch (error) {
         res.status(500).send({ error: error.message });
     }
 });
+
 
 // Get exam by ID
 router.get('/get/:id', async (req, res) => {

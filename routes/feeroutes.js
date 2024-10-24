@@ -88,10 +88,12 @@ const sendEmail = (to, subject, text) => {
 });
 */}
 // add fee data 
+// Add a new fee record
 router.post('/add', async (req, res) => {
     try {
         const {
             studentID,
+            userId, // Include userId in the request body
             feePaid,
             otherFee = 0, // default to 0 if not provided
             feeMonth,
@@ -133,15 +135,15 @@ router.post('/add', async (req, res) => {
             { $group: { _id: null, totalPaidAmount: { $sum: "$paidAmount" } } }
         ]);
 
+        const totalDues = student.totalFee - (totalPaid[0]?.totalPaidAmount || 0) - paidAmount;
 
-
-        totalDues = student.totalFee - (totalPaid[0]?.totalPaidAmount || 0) - paidAmount;
         // Determine status based on dueAmount
         const status = totalDues > 0 ? 'Due' : 'Paid';
 
         // Create a new Fee record
         const newFee = new Fee({
             studentID,
+            userId, // Save the userId in the Fee record
             feePaid,
             otherFee,
             paidAmount,
@@ -161,14 +163,13 @@ router.post('/add', async (req, res) => {
         const fee = await newFee.save();
         console.log('Saved fee:', fee);
 
-
-
         res.status(201).json({ msg: 'Fee record created successfully', fee });
     } catch (err) {
         console.error('Error saving fee:', err.message);
         res.status(400).json({ msg: err.message });
     }
 });
+
 
 // Get fee record by ID
 {/*
@@ -305,9 +306,14 @@ router.get('/student/:studentID', async (req, res) => {
 
 
 // Get all fee records
+// Get all fee records based on userId
 router.get('/get', async (req, res) => {
+    const { userId } = req.query; // Destructure userId from query parameters
+
     try {
-        const fees = await Fee.find().populate('studentID', 'studentID name class dateOfBirth gender aadharNumber email parent.fatherName contactNumber address');
+        // Fetch fee records, filtering by userId if provided
+        const fees = await Fee.find(userId ? { userId } : {}).populate('studentID', 'studentID name class dateOfBirth gender aadharNumber email parent.fatherName contactNumber address');
+
         if (!fees || fees.length === 0) {
             return res.status(404).json({ msg: 'No fee records found' });
         }
@@ -322,32 +328,48 @@ router.get('/get', async (req, res) => {
     }
 });
 
+
 // get fee record  using studentID and month 
+// router.get('/get/:studentID/:month', async (req, res) => {
+//     const { studentID, month } = req.params;
+
+//     console.log(`Received request for studentID: ${studentID} and month: ${month}`);
+
+//     try {
+//         // Debugging output for query
+//         console.log(`Querying database with studentID: ${studentID} and feeMonth: ${month}`);
+
+//         const fee = await Fee.findOne({ studentID, feeMonth: month });
+
+//         // Debugging output for result
+//         if (!fee) {
+//             console.log(`No fee record found for studentID: ${studentID} and month: ${month}`);
+//             return res.status(404).json({ message: 'Fee record not found' });
+//         }
+
+//         console.log(`Fee record found:`, fee);
+//         res.json(fee);
+//     } catch (error) {
+//         console.error('Error fetching fee record:', error);
+//         res.status(500).json({ message: error.message });
+//     }
+// });
+
+// Assuming you are using Express and Mongoose
 router.get('/get/:studentID/:month', async (req, res) => {
     const { studentID, month } = req.params;
 
-    console.log(`Received request for studentID: ${studentID} and month: ${month}`);
-
     try {
-        // Debugging output for query
-        console.log(`Querying database with studentID: ${studentID} and feeMonth: ${month}`);
+        // Fetching fee record (you may need to adjust the query based on your schema)
+        const feeRecord = await Fee.findOne({ studentID, feeMonth: month });
 
-        const fee = await Fee.findOne({ studentID, feeMonth: month });
-
-        // Debugging output for result
-        if (!fee) {
-            console.log(`No fee record found for studentID: ${studentID} and month: ${month}`);
-            return res.status(404).json({ message: 'Fee record not found' });
-        }
-
-        console.log(`Fee record found:`, fee);
-        res.json(fee);
+        // Return an array, even if there's one record
+        res.status(200).json(feeRecord ? [feeRecord] : []); // Wrap the record in an array
     } catch (error) {
         console.error('Error fetching fee record:', error);
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 });
-
 
 // Update total fee
 router.put('/update/:id', async (req, res) => {

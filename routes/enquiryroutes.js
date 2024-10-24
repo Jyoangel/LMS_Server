@@ -18,15 +18,28 @@ router.post('/add', async (req, res) => {
 });
 
 // Get all enquiries
+// Get all enquiries for a specific user
 router.get('/get', async (req, res) => {
+    const { userId } = req.query; // Extract userId from query parameters
+
     try {
-        const enquiries = await Enquiry.find();
-        const count = await getEnquiryCount();
+        // Validate that userId is provided
+        if (!userId) {
+            return res.status(400).json({ message: "User ID is required" });
+        }
+
+        // Fetch enquiries based on userId
+        const enquiries = await Enquiry.find({ userId });
+
+        // Get the count of enquiries for the specific user
+        const count = await Enquiry.countDocuments({ userId });
+
         res.status(200).json({ enquiries, count });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 });
+
 
 // Get an enquiry by ID
 router.get('/get/:id', async (req, res) => {

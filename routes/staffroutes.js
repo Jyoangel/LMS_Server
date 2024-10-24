@@ -95,23 +95,53 @@ router.post('/import', upload.single('file'), async (req, res) => {
 // Create a new staff member
 router.post('/add', async (req, res) => {
     try {
-        const staff = new Staff(req.body);
+        const { userId, ...staffData } = req.body;
+
+        // Decode the userId if it was URL-encoded
+        const decodedUserId = decodeURIComponent(userId);
+
+        if (!decodedUserId) {
+            return res.status(400).json({ message: 'userId is required' });
+        }
+
+        const staff = new Staff({
+            ...staffData,
+            userId: decodedUserId, // Ensure the decoded userId is saved with the staff data
+        });
+
         await staff.save();
-        const count = await Staff.countDocuments();
-        res.status(200).json({ staff, message: `The total number of Staffs is: ${count}` });
+
+        const count = await Staff.countDocuments({ userId: decodedUserId });
+        res.status(200).json({ staff, message: `The total number of staff members with this userId is: ${count}` });
     } catch (error) {
         res.status(400).send({ message: error.message });
     }
 });
 
-// Get all staff members
+
+// Get staff members by userId
 router.get('/get', async (req, res) => {
     try {
-        const staff = await Staff.find();
-        const count = await Staff.countDocuments();
-        res.status(200).json({ staff, message: `The total number of Staffs is: ${count}` });
+        const { userId } = req.query;
+
+        // Decode the userId if it was URL-encoded
+        const decodedUserId = decodeURIComponent(userId);
+
+        if (!decodedUserId) {
+            return res.status(400).json({ message: 'userId is required' });
+        }
+
+        // Fetch staff members based on userId
+        const staff = await Staff.find({ userId: decodedUserId });
+
+        if (staff.length === 0) {
+            return res.status(404).json({ message: 'No staff members found for this userId' });
+        }
+
+        const count = await Staff.countDocuments({ userId: decodedUserId });
+        res.status(200).json({ staff, message: `The total number of staff members with this userId is: ${count}` });
     } catch (error) {
-        res.status(500).json(error);
+        res.status(500).json({ message: error.message });
     }
 });
 
@@ -164,13 +194,19 @@ router.delete('/delete/:id', async (req, res) => {
 // get staff  count 
 router.get('/staff-count', async (req, res) => {
     try {
-        const count = await Staff.countDocuments();
-        const presentCount = await Staff.countDocuments({ isPresent: true });
+        const { userId } = req.query; // Extract userId from query parameters
+
+        // Count documents that match the userId
+        const count = await Staff.countDocuments({ userId });
+        const presentCount = await Staff.countDocuments({ isPresent: true, userId }); // Count present staff based on userId
+
         res.status(200).json({ count, presentCount });
     } catch (error) {
-        res.status(500).json(error);
+        console.error('Error fetching staff count:', error);
+        res.status(500).json({ message: 'Server Error', error: error.message });
     }
 });
+
 
 router.put('/selectStaff/:staffID', async (req, res) => {
     const { staffID } = req.params;

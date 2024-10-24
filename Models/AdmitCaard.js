@@ -76,6 +76,11 @@ const AdmitCaardSchema = new Schema({
         type: String,
         default: 'admit card'
     },
+    userId: {
+        type: String,
+        required: true,
+
+    },
     date: { type: Date, default: getCurrentDateIST },  // IST date
     time: { type: String, default: getCurrentTimeIST }, // IST time
 }, {
