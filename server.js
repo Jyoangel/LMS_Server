@@ -172,7 +172,7 @@ io.on('connection', (socket) => {
 });
 */}
 app.use(cookieParser());
-
+app.use(express.json());
 app.use(session({
   secret: '5c69a3691b9269010ce3f516d894af1106a7b15015b7442e62643a09154e18c6d451d28ce47dce76c8c794a67cc0cc61f56eabc6520f44aa0acf2321112bb9eb',
   resave: false,
@@ -180,14 +180,47 @@ app.use(session({
   cookie: { secure: true, httpOnly: true }
 }));
 
-const connectDB = require('./config/db');
-connectDB();
+ const connectDB = require('./config/db');
+ connectDB();
+// app.use(async (req, res, next) => {
 
-app.use(cors({
-  origin: process.env.CORS_ORIGIN,
-  credentials: true,
-}));
-app.use(express.json());
+//   const dbName = req.body.dbName ;
+//   console.log("Ressp", dbName);// Assuming dbName is based on user's Auth0 sub
+
+//   if (dbName) {
+//     try {
+//       await connectDB(dbName); // Connect to the user's specific database
+//     } catch (err) {
+//       return res.status(500).json({ error: 'Failed to switch database' });
+//     }
+//   }
+//   next(); // Proceed to the next middleware or route handler
+// });
+
+// app.post('api/admin/create-database', async (req, res) => {
+//     const { dbName } = req.body;
+//     console.log("Res", dbName);// Connect to the new database
+
+//     if (!dbName) {
+//         return res.status(400).json({ error: 'Database name is required' });
+//     }
+
+//     try {
+
+//         const response = await connectDB(dbName);
+//         console.log("Resss", response);// Connect to the new database
+//         res.status(200).json({ message: `Database ${dbName} created successfully` });
+//     } catch (error) {
+//         res.status(500).json({ error: 'Failed to create database', details: error.message });
+//     }
+// });
+
+
+// app.use(cors({
+//   origin: process.env.CORS_ORIGIN,
+//   credentials: true,
+// }));
+
 //app.use('/uploads', express.static('uploads'));
 
 
