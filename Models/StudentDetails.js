@@ -135,7 +135,7 @@ const studentSchema = new Schema({
     },
     localGuardian: {
         type: localGuardianSchema,
-        required: [true, 'Local guardian information is required']
+        
     },
     entryDate: {
         type: Date,
