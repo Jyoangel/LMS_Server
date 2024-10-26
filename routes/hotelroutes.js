@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Hotel = require('../Models/Hotel'); // Adjust the path as necessary
 
-const getHotelCount = async () => {
-    return await Hotel.countDocuments();
+const getHotelCountByUserId = async (userId) => {
+    return await Hotel.countDocuments({ userId }); // Count documents that match userId
 };
 // Add a new hotel
 router.post('/add', async (req, res) => {
@@ -17,14 +17,18 @@ router.post('/add', async (req, res) => {
 });
 
 // Get all hotels
-// Get all hotels
 router.get('/get', async (req, res) => {
+    const { userId } = req.query; // Get userId from query parameters
+
     try {
-        const hotels = await Hotel.find({});
-        const count = await getHotelCount();
+        // Find hotels based on userId
+        const hotels = await Hotel.find({ userId }); // Assuming Hotel schema has a userId field
+        const count = await getHotelCountByUserId(userId); // Get count specific to userId
+
         res.status(200).send({ hotels, count });
     } catch (error) {
-        res.status(500).send({ message: 'Database error' }); // Include error message here
+        console.error("Error fetching hotels:", error); // Log the error for debugging
+        res.status(500).send({ message: 'Database error', error: error.message }); // Include error message
     }
 });
 

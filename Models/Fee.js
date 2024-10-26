@@ -44,7 +44,7 @@ const feeSchema = new Schema({
     },
     receiptNo: {
         type: Number,
-        unique: true
+
     },
     status: {
         type: String,
@@ -129,13 +129,12 @@ async function generateFeeDetails(doc, next, update = null) {
     try {
         console.log('New document - generating receiptNo and srNo');
 
-        // Find the last document sorted by `receiptNo` and `srNo`
-        const lastFee = await mongoose.model('Fee').findOne().sort({ receiptNo: -1 });
-        const lastSrNo = await mongoose.model('Fee').findOne().sort({ srNo: -1 });
+        const lastFeeForStudent = await mongoose.model('Fee').findOne({ studentID: doc.studentID }).sort({ receiptNo: -1, srNo: -1 });
 
-        // Generate receiptNo and srNo
-        doc.receiptNo = lastFee ? lastFee.receiptNo + 1 : 1;
-        doc.srNo = lastSrNo ? lastSrNo.srNo + 1 : 1;
+        // Generate receiptNo and srNo based on the student's previous records
+        doc.receiptNo = lastFeeForStudent ? lastFeeForStudent.receiptNo + 1 : 1;
+        doc.srNo = lastFeeForStudent ? lastFeeForStudent.srNo + 1 : 1;
+
         console.log('Generated receiptNo:', doc.receiptNo, 'srNo:', doc.srNo);
 
         // Calculate total and paidAmount
@@ -151,13 +150,23 @@ async function generateFeeDetails(doc, next, update = null) {
             .findOne({ studentID: doc.studentID, feeMonth: previousMonth, dueAmount: 0 })
             .sort({ createdAt: -1 });
 
-        console.log('Previous extra fee:', previousMonthFee);
-        doc.previousExtraMonthFee = previousMonthFee ? previousMonthFee.extraFee : 0;
-        console.log('Previous extra fee:', doc.previousExtraMonthFee);
+        // console.log('Previous month extra fee:', previousMonthFee);
+        // doc.previousExtraMonthFee = previousMonthFee ? previousMonthFee.extraFee : 0;
+        // console.log('Previous month extra fee:', doc.previousExtraMonthFee);
 
-        // Calculate the total amount paid, including the previous extra fee
-        const totalAmountPaid = parseFloat((doc.paidAmount + doc.previousExtraMonthFee).toFixed(2));
-        console.log("totalAmountPaid", totalAmountPaid);
+        // // Calculate the total amount paid, including the previous extra fee
+        // const totalAmountPaid = parseFloat((doc.feePaid + doc.previousExtraMonthFee).toFixed(2));
+        // console.log("totalAmountPaid", totalAmountPaid);
+
+        doc.previousExtraMonthFee = previousMonthFee ? previousMonthFee.extraFee : 0;
+        console.log('Previous month extra fee:', doc.previousExtraMonthFee);
+
+        let totalAmountPaid = parseFloat((doc.feePaid).toFixed(2)); // Start with current payment
+        console.log("totaolamountPaid", totalAmountPaid)
+        if (doc.previousExtraMonthFee > 0 && lastFeeForStudent && lastFeeForStudent.feeMonth === previousMonth) {
+            totalAmountPaid += doc.previousExtraMonthFee;
+            console.log('Applying previous extra fee, totalAmountPaid:', totalAmountPaid);
+        }
 
         const student = await mongoose.model('StudentDetail').findById(doc.studentID);
         if (!student) {
@@ -178,7 +187,7 @@ async function generateFeeDetails(doc, next, update = null) {
 
         // If there is a previous fee record with `dueAmount` of 0 for the current month, add `previousExtraFee` to the new `paidAmount`
         if (previousFee) {
-            doc.extraFee = parseFloat((doc.previousExtraFee + doc.paidAmount).toFixed(2));
+            doc.extraFee = parseFloat((doc.previousExtraFee + doc.feePaid).toFixed(2));
         } else {
             doc.extraFee = 0;
         }
@@ -199,22 +208,45 @@ async function generateFeeDetails(doc, next, update = null) {
             ? doc.dueMonth[currentMonth]
             : monthlyFee;
 
+
+
+
+        // If there are no dues, direct any extra payment to `extraFee`
+        //let dueAmountForCurrentMonth = doc.dueAmount?.[currentMonth] || monthlyFee;
         console.log('Calculated dueAmountForCurrentMonth:', dueAmountForCurrentMonth);
 
-        // Calculate the effective amount for the current month
-        if (totalAmountPaid >= dueAmountForCurrentMonth) {
-            // If paid amount covers the due amount
-            doc.extraFee = parseFloat((totalAmountPaid - dueAmountForCurrentMonth).toFixed(2)); // Calculate extra fee
-            doc.dueMonth[currentMonth] = 0; // Dues for the month are cleared
-            doc.dueAmount = 0; // Clear dueAmount as well
-            console.log('Paid amount covers the due amount. Extra Fee:', doc.extraFee);
+        if (previousFee.dueAmount === 0) {
+            doc.extraFee = doc.extraFee
+            doc.dueMonth[currentMonth] = 0;
+            doc.dueAmount = 0;
+            console.log('No due, extra payment added to extra fee. New Extra Fee:', doc.extraFee);
+        } else if (totalAmountPaid >= dueAmountForCurrentMonth) {
+            // Calculate any new extra fee
+            doc.extraFee = parseFloat((totalAmountPaid - dueAmountForCurrentMonth).toFixed(2));
+            doc.dueMonth[currentMonth] = 0;
+            doc.dueAmount = 0;
+            console.log('Due amount covered. Extra Fee:', doc.extraFee);
         } else {
-            // If paid amount is less than the due amount
-            doc.extraFee = doc.extraFee; // Reset extra fee if not exceeded
-            doc.dueMonth[currentMonth] = parseFloat(Math.max(dueAmountForCurrentMonth - totalAmountPaid, 0).toFixed(2)); // Update dues
-            console.log('Paid amount does not cover the due amount. New Dues:', doc.dueMonth[currentMonth]);
+            // Update dues if payment is less than due amount
+            doc.extraFee = 0;
+            doc.dueMonth[currentMonth] = parseFloat((dueAmountForCurrentMonth - totalAmountPaid).toFixed(2));
             doc.dueAmount = doc.dueMonth[currentMonth];
+            console.log('Due amount not fully covered. Remaining Dues:', doc.dueAmount);
         }
+        // // Calculate the effective amount for the current month
+        // if (totalAmountPaid >= dueAmountForCurrentMonth) {
+        //     // If paid amount covers the due amount
+        //     doc.extraFee = parseFloat((totalAmountPaid - dueAmountForCurrentMonth).toFixed(2)); // Calculate extra fee
+        //     doc.dueMonth[currentMonth] = 0; // Dues for the month are cleared
+        //     doc.dueAmount = 0; // Clear dueAmount as well
+        //     console.log('Paid amount covers the due amount. Extra Fee:', doc.extraFee);
+        // } else {
+        //     // If paid amount is less than the due amount
+        //     doc.extraFee = doc.extraFee; // Reset extra fee if not exceeded
+        //     doc.dueMonth[currentMonth] = parseFloat(Math.max(dueAmountForCurrentMonth - totalAmountPaid, 0).toFixed(2)); // Update dues
+        //     console.log('Paid amount does not cover the due amount. New Dues:', doc.dueMonth[currentMonth]);
+        //     doc.dueAmount = doc.dueMonth[currentMonth];
+        // }
 
         // Log the final state of the dueMonth and extraFee
         console.log('Final dueMonth:', doc.dueMonth);
@@ -223,13 +255,13 @@ async function generateFeeDetails(doc, next, update = null) {
         // Calculate total paid amount from previous records
         const totalPaid = await mongoose.model('Fee').aggregate([
             { $match: { studentID: doc.studentID } },
-            { $group: { _id: null, totalPaidAmount: { $sum: "$paidAmount" } } }
+            { $group: { _id: null, totalPaidAmount: { $sum: "$feePaid" } } }
         ]);
 
         // Calculate total dues
         const previousTotalPaidAmount = totalPaid[0]?.totalPaidAmount || 0;
         const totalFeeOwed = parseFloat(student.totalFee.toFixed(2)); // Total fee owed for the student
-        doc.totalDues = parseFloat(Math.max(0, totalFeeOwed - previousTotalPaidAmount - doc.paidAmount).toFixed(2));
+        doc.totalDues = parseFloat(Math.max(0, totalFeeOwed - previousTotalPaidAmount - doc.feePaid).toFixed(2));
 
         // Determine status based on total dues
         doc.status = doc.totalDues <= 0 ? 'Paid' : 'Due';

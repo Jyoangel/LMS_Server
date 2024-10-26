@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Transportation = require('../Models/Transpotation');
 
-const getTransportationCount = async () => {
-    return await Transportation.countDocuments();
+const getTransportationCountByUserId = async (userId) => {
+    return await Transportation.countDocuments({ userId }); // Count documents that match userId
 };
 // Add a new transportation record
 router.post('/add', async (req, res) => {
@@ -18,12 +18,17 @@ router.post('/add', async (req, res) => {
 
 // Get all transportation records
 router.get('/get', async (req, res) => {
+    const { userId } = req.query; // Get userId from query parameters
+
     try {
-        const records = await Transportation.find();
-        const count = await getTransportationCount();
+        // Find transportation records based on userId
+        const records = await Transportation.find({ userId }); // Assuming Transportation schema has a userId field
+        const count = await getTransportationCountByUserId(userId); // Get count specific to userId
+
         res.status(200).json({ records, count });
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        console.error("Error fetching transportation records:", error); // Log the error for debugging
+        res.status(400).json({ message: error.message }); // Include error message
     }
 });
 

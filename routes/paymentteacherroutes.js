@@ -10,7 +10,7 @@ const TeacherDetails = require('../Models/TeacherDetails');
 router.post('/add', async (req, res) => {
     try {
         console.log('Request body:', req.body); // Log the request body
-        const { teacherId, paidAmount, remark, month } = req.body;
+        const { teacherId, paidAmount, remark, month, userId } = req.body;
 
         // Fetch teacher details by ID
         const teacher = await TeacherDetails.findById(teacherId);
@@ -35,7 +35,8 @@ router.post('/add', async (req, res) => {
             paidAmount,
             dueAmount,
             remark,
-            month
+            month,
+            userId
         });
 
         // Save the payment record to the database
@@ -50,19 +51,21 @@ router.post('/add', async (req, res) => {
     }
 });
 
-
+// get according to userId
 router.get('/get', async (req, res) => {
     try {
-        const payments = await PaymentTeacher.find().populate('teacherId', 'teacherID name aadharNumber subjectTaught highestDegreeEarned contactNumber parent.fatherName');
+        const { userId } = req.query; // Get userId from query parameters
+
+        // Construct query to filter by userId if provided, otherwise fetch all records
+        //const query = userId ? { teacherId: userId } : {};
+        const payments = await PaymentTeacher.find(userId ? { userId } : {}).populate('teacherId', 'teacherID name aadharNumber subjectTaught highestDegreeEarned contactNumber parent.fatherName');
+
         const totalPayments = payments.length;
         const totalAmountPaid = payments.reduce((acc, payment) => acc + payment.paidAmount, 0);
-
-
 
         res.json({
             totalPayments,
             totalAmountPaid,
-
             payments
         });
     } catch (err) {
@@ -70,7 +73,6 @@ router.get('/get', async (req, res) => {
         res.status(500).send('Server error');
     }
 });
-
 
 
 

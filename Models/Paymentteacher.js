@@ -28,7 +28,12 @@ const paymentTeacherSchema = new Schema({
     remark: {
         type: String,
         require: true
-    }
+    },
+    userId: {
+        type: String,
+        required: true,
+
+    },
 
 }, { timestamps: true });
 

@@ -198,7 +198,7 @@ router.get('/get/:id', async (req, res) => {
 
     try {
         // Fetch the specific fee record by ID and populate student details
-        const fee = await Fee.findById(id).populate('studentID', 'studentID name class dateOfBirth gender aadharNumber email parent.fatherName contactNumber address admissionNumber session monthlyFee');
+        const fee = await Fee.findById(id).populate('studentID', 'studentID name class dateOfBirth gender aadharNumber email parent.fatherName contactNumber address admissionNumber session monthlyFee totalFee');
 
         if (!fee) {
             console.log(`Fee record not found for id: ${id}`);
@@ -269,7 +269,7 @@ router.get('/student/:studentID', async (req, res) => {
         // Calculate total paid amount for the student
         const totalPaidResult = await Fee.aggregate([
             { $match: { studentID: student._id } },
-            { $group: { _id: null, totalPaid: { $sum: '$paidAmount' } } }
+            { $group: { _id: null, totalPaid: { $sum: '$feePaid' } } }
         ]);
 
         const totalPaid = totalPaidResult[0]?.totalPaid || 0;
@@ -319,7 +319,7 @@ router.get('/get', async (req, res) => {
         }
 
         const totalFeesCount = fees.length;
-        const totalPaidAmount = fees.reduce((sum, fee) => sum + fee.paidAmount, 0);
+        const totalPaidAmount = fees.reduce((sum, fee) => sum + fee.feePaid, 0);
 
         res.json({ fees, totalFeesCount, totalPaidAmount });
     } catch (err) {
@@ -329,47 +329,47 @@ router.get('/get', async (req, res) => {
 });
 
 
-// get fee record  using studentID and month 
-// router.get('/get/:studentID/:month', async (req, res) => {
-//     const { studentID, month } = req.params;
-
-//     console.log(`Received request for studentID: ${studentID} and month: ${month}`);
-
-//     try {
-//         // Debugging output for query
-//         console.log(`Querying database with studentID: ${studentID} and feeMonth: ${month}`);
-
-//         const fee = await Fee.findOne({ studentID, feeMonth: month });
-
-//         // Debugging output for result
-//         if (!fee) {
-//             console.log(`No fee record found for studentID: ${studentID} and month: ${month}`);
-//             return res.status(404).json({ message: 'Fee record not found' });
-//         }
-
-//         console.log(`Fee record found:`, fee);
-//         res.json(fee);
-//     } catch (error) {
-//         console.error('Error fetching fee record:', error);
-//         res.status(500).json({ message: error.message });
-//     }
-// });
-
-// Assuming you are using Express and Mongoose
+//get fee record  using studentID and month 
 router.get('/get/:studentID/:month', async (req, res) => {
     const { studentID, month } = req.params;
 
-    try {
-        // Fetching fee record (you may need to adjust the query based on your schema)
-        const feeRecord = await Fee.findOne({ studentID, feeMonth: month });
+    console.log(`Received request for studentID: ${studentID} and month: ${month}`);
 
-        // Return an array, even if there's one record
-        res.status(200).json(feeRecord ? [feeRecord] : []); // Wrap the record in an array
+    try {
+        // Debugging output for query
+        console.log(`Querying database with studentID: ${studentID} and feeMonth: ${month}`);
+
+        const fee = await Fee.find({ studentID, feeMonth: month });
+
+        // Debugging output for result
+        if (!fee) {
+            console.log(`No fee record found for studentID: ${studentID} and month: ${month}`);
+            return res.status(404).json({ message: 'Fee record not found' });
+        }
+
+        console.log(`Fee record found:`, fee);
+        res.json(fee);
     } catch (error) {
         console.error('Error fetching fee record:', error);
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(500).json({ message: error.message });
     }
 });
+
+// // Assuming you are using Express and Mongoose
+// router.get('/get/:studentID/:month', async (req, res) => {
+//     const { studentID, month } = req.params;
+
+//     try {
+//         // Fetching fee record (you may need to adjust the query based on your schema)
+//         const feeRecord = await Fee.find({ studentID, feeMonth: month });
+
+//         // Return an array, even if there's one record
+//         res.status(200).json(feeRecord ? [feeRecord] : []); // Wrap the record in an array
+//     } catch (error) {
+//         console.error('Error fetching fee record:', error);
+//         res.status(500).json({ message: 'Internal Server Error' });
+//     }
+// });
 
 // Update total fee
 router.put('/update/:id', async (req, res) => {

@@ -27,7 +27,12 @@ const TransportationSchema = new Schema({
     dropTime: {
         type: String,
         required: true
-    }
+    },
+    userId: {
+        type: String,
+        required: true,
+
+    },
 });
 
 // Middleware to format pickupTime and dropTime to IST before saving

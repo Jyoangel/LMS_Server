@@ -133,10 +133,36 @@ router.post('/import', upload.single('file'), async (req, res) => {
 
 
 // create new student 
+// router.post('/add', async (req, res) => {
+//     try {
+//         const { userId, ...studentData } = req.body;
+
+//         // Decode the userId if it was URL-encoded
+//         const decodedUserId = decodeURIComponent(userId);
+
+//         if (!decodedUserId) {
+//             return res.status(400).json({ message: 'userId is required' });
+//         }
+
+//         const student = new StudentDetail({
+//             ...studentData,
+//             userId: decodedUserId, // Ensure the decoded userId is saved with the student data
+//         });
+
+//         await student.save();
+
+//         const count = await StudentDetail.countDocuments({ userId: decodedUserId });
+//         res.status(201).json({ student, message: `The total number of students is: ${count}` });
+//     } catch (error) {
+//         res.status(400).json({ message: error.message });
+//     }
+// });
+
+
 router.post('/add', async (req, res) => {
     try {
-        const { userId, ...studentData } = req.body;
-
+        const { userId, localGuardian, ...studentData } = req.body;
+        
         // Decode the userId if it was URL-encoded
         const decodedUserId = decodeURIComponent(userId);
 
@@ -144,9 +170,20 @@ router.post('/add', async (req, res) => {
             return res.status(400).json({ message: 'userId is required' });
         }
 
+        // Check if guardianAadharNumber is unique if it's provided
+        if (localGuardian?.guardianAadharNumber) {
+            const existingGuardian = await StudentDetail.findOne({
+                'localGuardian.guardianAadharNumber': localGuardian.guardianAadharNumber
+            });
+            if (existingGuardian) {
+                return res.status(400).json({ message: 'Guardian Aadhar number must be unique.' });
+            }
+        }
+
         const student = new StudentDetail({
             ...studentData,
-            userId: decodedUserId, // Ensure the decoded userId is saved with the student data
+            userId: decodedUserId,
+            localGuardian
         });
 
         await student.save();

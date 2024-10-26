@@ -8,7 +8,7 @@ router.post('/add', async (req, res) => {
     try {
         console.log('Request body:', req.body); // Log request body
 
-        const { staffId, paidAmount, remark, month } = req.body;
+        const { staffId, paidAmount, remark, month, userId } = req.body;
 
         // Fetch staff details by ID
         const staff = await StaffDetail.findById(staffId);
@@ -34,7 +34,8 @@ router.post('/add', async (req, res) => {
             status, // Set payment status
             paidAmount, // Set paid amount from the request
             dueAmount, // Set calculated due amount
-            remark // Set the remark from the request
+            remark, // Set the remark from the request
+            userId
         });
 
         // Save the payment record to the database
@@ -53,7 +54,12 @@ router.post('/add', async (req, res) => {
 // Get all payment records
 router.get('/get', async (req, res) => {
     try {
-        const payments = await StaffPayment.find().populate('staffId', 'name aadharNumber education position employmentType contactNumber');
+        const { userId } = req.query; // Get userId from query parameters
+
+        // Filter payments by userId if provided, otherwise fetch all
+        //const query = userId ? { staffId: userId } : {};
+        const payments = await StaffPayment.find(userId ? { userId } : {}).populate('staffId', 'name aadharNumber education position employmentType contactNumber');
+
         const totalPayments = payments.length;
         const totalAmountPaid = payments.reduce((acc, payment) => acc + payment.paidAmount, 0);
 
@@ -67,6 +73,7 @@ router.get('/get', async (req, res) => {
         res.status(500).send('Server error');
     }
 });
+
 
 // Get payment record by ID
 router.get('/show/:id', async (req, res) => {
