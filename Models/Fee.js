@@ -215,7 +215,7 @@ async function generateFeeDetails(doc, next, update = null) {
         //let dueAmountForCurrentMonth = doc.dueAmount?.[currentMonth] || monthlyFee;
         console.log('Calculated dueAmountForCurrentMonth:', dueAmountForCurrentMonth);
 
-        if (previousFee.dueAmount === 0) {
+        if (previousFee && previousFee.dueAmount === 0) {
             doc.extraFee = doc.extraFee
             doc.dueMonth[currentMonth] = 0;
             doc.dueAmount = 0;
