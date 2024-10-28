@@ -358,6 +358,7 @@ router.put('/selectStudent/:studentId', async (req, res) => {
 
 
 // route to send meesage through email 
+
 router.post('/sendMessages', async (req, res) => {
     const { subject, message } = req.body;
 
@@ -373,13 +374,23 @@ router.post('/sendMessages', async (req, res) => {
             return res.status(400).json({ message: 'No students selected for messaging' });
         }
 
+        // Extract student IDs from selected students
+        const studentIDs = selectedStudents.map(student => student.studentID);
+
+        // Find the corresponding student details to get emails
+        const studentDetails = await StudentDetail.find({ studentID: { $in: studentIDs } });
+
         // Extract emails of selected students
-        const emails = selectedStudents.map(student => student.email);
+        const emails = studentDetails.map(student => student.email).filter(email => email);
+
+        if (emails.length === 0) {
+            return res.status(400).json({ message: 'No valid email addresses found for selected students' });
+        }
 
         // Configure email options
         const mailOptions = {
             from: EMAIL_USER,
-            to: emails.join(','),
+            to: emails.join(','), // join emails with a comma separator
             subject: subject,
             text: message
         };
